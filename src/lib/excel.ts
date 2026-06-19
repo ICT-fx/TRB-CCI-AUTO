@@ -10,6 +10,18 @@ interface Column {
   width: number;
 }
 
+/**
+ * Neutralize spreadsheet formula injection. Extracted values come from arbitrary
+ * customer documents, so a cell beginning with =, +, -, @, tab or CR could be
+ * evaluated as a formula when the operator opens the file. Prefix such strings
+ * with an apostrophe; leave numbers untouched (Excel never evaluates them).
+ */
+function safeCell(v: string | number | null | undefined): string | number {
+  if (typeof v === "number") return v;
+  const s = v == null ? "" : String(v);
+  return /^[=+\-@\t\r]/.test(s) ? `'${s}` : s;
+}
+
 // Document-level columns (one value per order).
 const DOC_COLUMNS: Column[] = [
   { header: "File Name", key: "fileName", width: 28 },
@@ -70,26 +82,26 @@ export async function exportToExcel(files: ProcessedFile[]): Promise<void> {
   for (const f of done) {
     const d = f.data!;
     const row: Record<string, string | number> = {
-      fileName: f.fileName,
-      customer: d.customer_name ?? "",
-      docNumber: d.document_number ?? "",
-      supplier: d.supplier_code ?? "",
-      address: d.delivery_address ?? "",
-      country: d.country ?? "",
-      deliveryDate: d.requested_delivery_date ?? "",
-      paymentTerms: d.payment_terms_days ?? "",
-      currency: d.currency ?? "",
+      fileName: safeCell(f.fileName),
+      customer: safeCell(d.customer_name),
+      docNumber: safeCell(d.document_number),
+      supplier: safeCell(d.supplier_code),
+      address: safeCell(d.delivery_address),
+      country: safeCell(d.country),
+      deliveryDate: safeCell(d.requested_delivery_date),
+      paymentTerms: safeCell(d.payment_terms_days),
+      currency: safeCell(d.currency),
       confidence: `${Math.round(d.confidence * 100)}%`,
-      comments: d.comments ?? "",
+      comments: safeCell(d.comments),
     };
 
     d.products.forEach((p, idx) => {
       const i = idx + 1;
-      row[`p${i}_name`] = p.product_name ?? "";
-      row[`p${i}_sku`] = p.sku ?? "";
-      row[`p${i}_qty`] = p.quantity ?? "";
-      row[`p${i}_price`] = p.unit_price ?? "";
-      row[`p${i}_currency`] = p.currency ?? d.currency ?? "";
+      row[`p${i}_name`] = safeCell(p.product_name);
+      row[`p${i}_sku`] = safeCell(p.sku);
+      row[`p${i}_qty`] = safeCell(p.quantity);
+      row[`p${i}_price`] = safeCell(p.unit_price);
+      row[`p${i}_currency`] = safeCell(p.currency ?? d.currency);
     });
 
     sheet.addRow(row);
