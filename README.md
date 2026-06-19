@@ -55,11 +55,13 @@ Browser (upload N files)
 
 ## Excel output
 
-- **Sheet 1 — Orders:** one row per document (file name, customer, document #,
-  supplier code, delivery address, country, delivery date, payment terms,
-  currency, confidence, comments).
-- **Sheet 2 — Order Lines:** one row per product (document #, product name, SKU,
-  quantity, unit price, currency).
+A **single sheet** ("Orders"), **one row per order**. Document-level columns
+(file name, customer, document #, supplier code, delivery address, country,
+delivery date, payment terms, currency, confidence, comments) come first, then
+every product line is spread across columns — `Product 1 Name / SKU / Quantity /
+Unit Price / Currency`, `Product 2 …`, etc. The number of product groups adapts
+to the order with the most line items, so each order is fully contained on one
+row.
 
 ## Tech stack
 
