@@ -23,10 +23,9 @@ handwritten delivery dates, and crossed-out values replaced by handwritten ones
    ```
    Get a key from <https://console.anthropic.com/>.
 
-3. **Logo** (already included)
-   The TRB Chemedica logo is at `public/trb-logo.webp`. To replace it, keep that
-   filename or update the `src` in `src/components/Header.tsx`. Without it, the
-   header shows a styled "TRB" wordmark fallback.
+3. **Logo**
+   The brand mark is built in code (`src/components/OrbLogo.tsx`) as `ORB` — a
+   circular SVG emblem plus a serif wordmark. No image asset to manage.
 
 4. **Run**
    ```bash

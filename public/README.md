@@ -1,11 +1,8 @@
 # public/
 
-The TRB Chemedica logo lives here as **`trb-logo.webp`**.
+Static assets served at the site root.
 
-The header (`src/components/Header.tsx`) renders `/trb-logo.webp`. If the file is
-absent, it falls back to a styled "TRB" wordmark, so the app still runs without
-it. To swap the logo, replace this file (keep the name, or update the `src` in
-`Header.tsx`).
-
-The application color palette is derived from the logo's blue and is defined in
-`src/app/globals.css` under the `@theme` block (`--color-trb-blue` etc.).
+The brand mark is **not** an image — it's built in code as `ORB`
+(`src/components/OrbLogo.tsx`): a circular SVG emblem above a serif wordmark,
+using the app's blue (`--color-trb-blue`) and display font. Edit that component
+to change the logo.

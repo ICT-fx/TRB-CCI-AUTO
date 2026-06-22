@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { OrbLogo } from "@/components/OrbLogo";
 import { UploadZone } from "@/components/UploadZone";
 import { ResultsTable } from "@/components/ResultsTable";
 import { useExtraction } from "@/hooks/useExtraction";
@@ -16,7 +17,6 @@ export default function Home() {
   const { files, isProcessing, addFiles, retry, removeFile, clearAll, updateData } =
     useExtraction();
   const [exporting, setExporting] = useState(false);
-  const [logoFailed, setLogoFailed] = useState(false);
 
   const stats = useMemo(() => {
     const total = files.length;
@@ -48,20 +48,8 @@ export default function Home() {
         <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-6 py-14 md:py-20 lg:grid-cols-[minmax(0,auto)_1fr] lg:gap-16">
           {/* Logo plate */}
           <div className="animate-rise flex justify-center lg:justify-start">
-            <div className="rounded-3xl bg-white p-6 shadow-[0_24px_60px_-24px_rgba(15,67,112,0.45)] ring-1 ring-trb-line sm:p-8">
-              {logoFailed ? (
-                <div className="flex h-36 w-36 items-center justify-center rounded-2xl bg-trb-blue text-4xl font-bold tracking-tight text-white">
-                  TRB
-                </div>
-              ) : (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src="/trb-logo.webp"
-                  alt="TRB Chemedica"
-                  className="h-36 w-auto sm:h-44"
-                  onError={() => setLogoFailed(true)}
-                />
-              )}
+            <div className="rounded-3xl bg-white px-10 py-8 shadow-[0_24px_60px_-24px_rgba(15,67,112,0.45)] ring-1 ring-trb-line sm:px-12 sm:py-10">
+              <OrbLogo />
             </div>
           </div>
 
