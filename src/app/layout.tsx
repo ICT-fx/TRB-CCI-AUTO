@@ -18,7 +18,7 @@ const sans = IBM_Plex_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "AI Order Extraction — TRB Chemedica",
+  title: "AI Order Extraction — ORB",
   description:
     "Upload customer order documents and extract structured order data with Claude.",
 };

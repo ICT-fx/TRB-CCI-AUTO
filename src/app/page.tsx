@@ -57,7 +57,7 @@ export default function Home() {
           <div className="animate-rise" style={{ animationDelay: "120ms" }}>
             <span className="inline-flex items-center gap-2 rounded-full bg-white/70 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-trb-blue ring-1 ring-inset ring-trb-line backdrop-blur">
               <span className="h-1.5 w-1.5 rounded-full bg-trb-blue" />
-              TRB Chemedica · Geneva
+              ORB · Geneva
             </span>
 
             <h1 className="mt-5 font-display text-5xl leading-[1.02] tracking-tight text-trb-blue-darker sm:text-6xl lg:text-7xl">
@@ -165,8 +165,8 @@ export default function Home() {
 
       <footer className="border-t border-trb-line bg-white">
         <div className="mx-auto max-w-7xl px-6 py-5 text-xs text-trb-muted">
-          TRB Chemedica · AI Order Extraction — documents are processed in memory
-          and never stored.
+          ORB · AI Order Extraction — documents are processed in memory and never
+          stored.
         </div>
       </footer>
     </div>
