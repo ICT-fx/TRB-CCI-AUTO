@@ -43,7 +43,6 @@ La colonne « Source » du fichier de spécification définit trois catégories 
 | 3 | Nom du client / partenaire | `customer_name` *(clé de jointure master data)* | texte |
 | 4 | Référence partenaire (n° commande fournisseur) | `partner_reference` | n° |
 | 9 | Date de livraison souhaitée | `requested_delivery_date` | JJ.MM.AAAA |
-| 13 | Mode d'expédition | `shipping_mode` | Avion / Camion |
 | 15 | Lieu de l'incoterm | `incoterm_location` | texte/lieu |
 | 17 | Destination | `destination` | texte/adresse |
 | 20 | SKU (une par ligne produit) | `products[].sku` | code SKU |
@@ -66,6 +65,7 @@ Champs de diagnostic également renvoyés par Claude : `confidence` (0..1),
 | 6 | Monnaie comptable | master data |
 | 7 | Conditions de paiement (jours) | master data |
 | 8 | Assurance | master data |
+| 13 | Mode d'expédition | master data |
 | 14 | Incoterm | master data |
 | 16 | Lieu de provenance | master data |
 | 18 | Destination EDI | master data |
@@ -81,13 +81,20 @@ Fichier `master_data.xlsx` livré **avec** la fonction (remplaçable plus tard p
 SharePoint / l'ERP). Feuille `partenaires`, **clé = nom du client** :
 
 ```
-nom_client | numero_tva | monnaie | conditions_paiement_jours | assurance | incoterm | lieu_provenance | destination_edi
+nom_client | numero_tva | monnaie | conditions_paiement_jours | assurance | mode_expedition | incoterm | lieu_provenance | destination_edi
 ```
 
 - Jointure par nom **normalisé** (minuscules, espaces réduits, accents tolérés).
 - Client introuvable → ces colonnes restent vides + colonne `statut` annotée
   « client introuvable dans le master data » + log d'avertissement.
 - Livré avec 2-3 lignes d'exemple à compléter par l'utilisateur.
+
+**Extensibilité de la jointure.** La clé est le nom du client *pour l'instant*,
+mais certaines données dépendront aussi du **produit** ou d'autres critères. Le
+module `enrichment.py` est donc conçu comme un point unique où l'on ajoute des
+tables/clés de jointure (par client, par produit, …) sans toucher au reste du
+code. Les tables définitives seront figées dans un second temps (le fichier
+master data n'est pas encore arrêté).
 
 ## Format de l'Excel de sortie
 
