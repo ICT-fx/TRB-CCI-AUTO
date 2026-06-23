@@ -1,0 +1,17 @@
+# Secrets et artefacts locaux — ne jamais committer
+local.settings.json
+
+# Environnement Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+.python_packages/
+
+# Azure Functions Core Tools
+bin/
+obj/
+.python_packages/
+
+# Sorties de test
+*.out.xlsx

@@ -1,0 +1,9 @@
+.git*
+.vscode
+.venv
+venv
+__pycache__
+local.settings.json
+selftest.py
+*.out.xlsx
+README.md

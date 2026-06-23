@@ -1,0 +1,6 @@
+# Dépendances de l'Azure Function (Python).
+# Versions volontairement souples ; le build Azure (Oryx) installe ces paquets.
+azure-functions>=1.21.0
+anthropic>=0.69.0
+openpyxl>=3.1.0
+pillow>=10.0.0
