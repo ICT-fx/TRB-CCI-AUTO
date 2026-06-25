@@ -17,7 +17,11 @@ Commandes (PDF) déposées dans un dossier SharePoint
   → une Azure Function lit chaque doc avec Claude et en extrait les données
   → la fonction génère un Excel CCI (format déterministe, openpyxl)
   → l'Excel est déposé dans un dossier SharePoint de sortie
+  → le PDF d'origine est archivé (ou routé vers « à revoir » si illisible)
 ```
+
+## État global : ✅ PIPELINE COMPLET ET VALIDÉ EN PRODUCTION (2026-06-25)
+Tout le flux de bout en bout fonctionne et a été validé avec des fichiers réels.
 
 ## Ce qui est FAIT et validé (NE PAS refaire)
 - **Azure Function Python construite, déployée et validée EN PRODUCTION** : elle
@@ -31,127 +35,110 @@ Commandes (PDF) déposées dans un dossier SharePoint
     app **`trb-cci-extraction-ae73fa`**, stockage **`trbccistae73fa`**.
   - Clé **Anthropic** : dans les *Application Settings* (`ANTHROPIC_API_KEY`),
     modèle `claude-sonnet-4-6`. Jamais dans le code.
-  - **Clé d'appel** de la fonction (déjà collée dans l'action HTTP du Logic App) ;
-    si besoin la récupérer :
-    `az functionapp keys list --name trb-cci-extraction-ae73fa --resource-group trb-cci-rg --query "functionKeys.default" -o tsv`
-- **Le Logic App d'orchestration est FONCTIONNEL DE BOUT EN BOUT** (voir
-  « Résolution » ci-dessous) : il liste les PDF, appelle la fonction, et dépose
-  un **Excel CCI correct** dans le dossier de sortie. Validé le 2026-06-24 avec
-  le PDF de test (fichier `CCI-VERIFY.xlsx` contenant les 22 champs CCI + les
-  données extraites : RheinCare Solutions GmbH, PO 8362, SKU 462830/462845…).
+  - **Clé d'appel** de la fonction (déjà dans l'action HTTP du Logic App) ; si
+    besoin : `az functionapp keys list --name trb-cci-extraction-ae73fa --resource-group trb-cci-rg --query "functionKeys.default" -o tsv`
+  - Réponse : `200` avec l'Excel (binaire) si lisible ; **non-2xx** (ex. 422) si
+    illisible / erreur — c'est ce qui déclenche le routage « A-revoir ».
+- **Le Logic App `trb-cci-logic` est FONCTIONNEL DE BOUT EN BOUT** (voir détail
+  ci-dessous) : liste les PDF, appelle la fonction, dépose l'Excel CCI, archive le
+  PDF traité, et route les illisibles vers « A-revoir ». Validé le 2026-06-25.
 - **Docs/code dans le dépôt** :
-  - `cci-function/README.md` (déploiement + test local)
-  - `cci-function/DEPLOIEMENT.md` (instance déployée, contrat HTTP)
-  - `docs/superpowers/specs/2026-06-23-cci-azure-function-design.md` (conception)
-  - `Donnees_CCI.xlsx` (spec des 22 données CCI, colonne « Source »)
-  - `cci-function/app/master_data.xlsx` (master data d'exemple, 3 partenaires)
-- **Outils installés (macOS)** : `az` 2.87 (connecté : `fantin.schellekens@trbchemedica.com`,
-  abonnement **"Azure subscription 1"** = essai gratuit), `func` 4.12.
+  - `cci-function/README.md`, `cci-function/DEPLOIEMENT.md`
+  - `docs/superpowers/specs/2026-06-23-cci-azure-function-design.md`
+  - `Donnees_CCI.xlsx` (spec des 22 données CCI), `cci-function/app/master_data.xlsx`
+- **Outils (macOS)** : `az` 2.87 (connecté `fantin.schellekens@trbchemedica.com`,
+  abonnement "Azure subscription 1"), `func` 4.12.
 
 ## Décision d'architecture (IMPORTANT)
-- **Power Automate premium n'est PAS disponible** → l'action HTTP standard de
-  Power Automate est impossible (elle est premium).
-- On a donc choisi **Azure Logic Apps (Consumption)** pour l'orchestration :
-  action HTTP native, pas de licence premium, facturé à l'usage sur l'abonnement
-  Azure déjà en place.
+- **Power Automate premium PAS disponible** → on utilise **Azure Logic Apps
+  (Consumption)** : action HTTP native, pas de licence premium.
 
-## Le Logic App
-- **Logic App** : **`trb-cci-logic`** (groupe `trb-cci-rg`, Switzerland North,
-  plan **Consommation**).
-- **Déclencheur** : **Récurrence**, tous les jours à **15:00** (fuseau
-  « Romance Standard Time » = UTC+01). Lancement manuel = **« Exécuter le déclencheur »**.
-- **Astuce technique cruciale** : le **sélecteur de dossier 📁** du concepteur
-  SharePoint **ne charge pas** dans ce navigateur. Pour cette raison, le flux a
-  été **mis au point et corrigé directement via `az` en CLI** (lecture/écriture
-  de la définition du workflow par l'API de management), pas dans le concepteur.
-  Commandes utiles :
-  - Lire la définition :
-    `az resource show -g trb-cci-rg -n trb-cci-logic --resource-type Microsoft.Logic/workflows`
-  - Déclencher manuellement (API) :
-    `az rest --method post --url ".../workflows/trb-cci-logic/triggers/Recurrence/run?api-version=2019-05-01"`
-  - Lire les runs / actions / répétitions : `.../runs`, `.../runs/{id}/actions`,
-    `.../runs/{id}/actions/{action}/repetitions`.
-- **Flux (5 actions, toutes ✅)** :
-  1. SharePoint **« Lister le dossier »** (dossier d'entrée)
-  2. **Pour chaque** fichier (sortie = **`Corps`** de l'étape 1) :
-     a. SharePoint **« Obtenir le contenu du fichier »**
-     b. **HTTP** POST → fonction `?filename=<Name>&code=<clé>`
-     c. SharePoint **« Créer le fichier »** dans le dossier de sortie
+## Le Logic App `trb-cci-logic`
+- Groupe `trb-cci-rg`, Switzerland North, plan **Consommation**.
+- **Déclencheur** : Récurrence tous les jours à **15:00** (« Romance Standard Time »
+  = UTC+01). Lancement manuel = **« Exécuter le déclencheur »**.
+- **⚠️ Le sélecteur de dossier 📁 du concepteur ne charge pas** dans ce navigateur.
+  Tout a donc été **mis au point via `az` en CLI** (lecture/écriture de la
+  définition du workflow par l'API de management `Microsoft.Logic/workflows`,
+  `api-version=2019-05-01`). Commandes utiles :
+  - Lire la def : `az resource show -g trb-cci-rg -n trb-cci-logic --resource-type Microsoft.Logic/workflows`
+  - Déclencher : `az rest --method post --url ".../workflows/trb-cci-logic/triggers/Recurrence/run?api-version=2019-05-01"`
+  - Runs / actions / répétitions (boucle) : `.../runs`, `.../runs/{id}/actions`,
+    `.../runs/{id}/actions/{action}/repetitions`. Les sorties sont dans
+    `properties.outputsLink.uri` (à `curl`).
+  - Le connecteur **SharePoint REST direct n'est pas accessible** avec le jeton
+    `az` (401 ; le tenant n'autorise pas l'app Azure CLI). Toute lecture/écriture
+    SharePoint passe par le **connecteur du Logic App**.
+- **Flux déployé (`For_each` sur la liste des PDF)** :
+  1. `Liste_du_dossier` (List folder) — entrée `Commandes-PDF`
+  2. Pour chaque fichier :
+     - `Obtenir_le_contenu_du_fichier` (Get file content)
+     - `HTTP` POST → fonction
+     - `Créer_un_fichier` (Create file) → Excel dans `Uppload-CCI` *(runAfter HTTP=Succeeded)*
+     - `Deplacer_vers_Commandes_Done` (Move file) → archive le PDF *(runAfter Créer=Succeeded)*
+     - `Deplacer_vers_A_revoir` (Move file) → route le PDF *(runAfter HTTP=Failed/TimedOut)*
 
-## ✅ Résolution du blocage (2026-06-24)
-Le blocage initial (« Lister le dossier » → **HTTP 400 "Route did not match"**)
-était un problème d'**encodage** ET de **format de chemin**, pas le sélecteur 📁.
-Trois correctifs ont rendu le flux fonctionnel ; ils sont **déjà déployés** :
-
-1. **Lister le dossier** — l'identificateur doit être **relatif au site** (PAS
-   `/sites/HQSupply` devant) ET **doublement encodé** (comme le dataset) :
-   ```
-   /folders/@{encodeURIComponent(encodeURIComponent('/Smart_Supply/Entrees-de-commandes/Commandes-PDF'))}
-   ```
-   (Simple encodage → les `/` se re-décodent → "Route did not match". Avec
-   `/sites/HQSupply` devant → 404 "Folder not found". La bonne forme est
-   `/Smart_Supply/…`. Les noms de dossiers sont **sans accents**.)
-
-2. **Obtenir le contenu du fichier** — utiliser le **chemin complet** `Path` du
-   fichier (pas `Name`), lui aussi **doublement encodé** :
-   ```
-   /files/@{encodeURIComponent(encodeURIComponent(item()?['Path']))}/content
-   ```
-
-3. **HTTP → Azure Function** — **retirer le mode de transfert « Chunked »**
-   (`runtimeConfiguration.contentTransfer`). Une Azure Function HTTP ne sait pas
-   négocier le protocole chunked de Logic Apps → la fonction recevait un corps
-   vide (`400 : "Corps de requête vide"`). Sans chunked, les octets bruts passent.
-
-4. **Créer le fichier** — laissé **tel quel** : corps = `@body('HTTP')`, mode
-   **Chunked conservé**, `overwrite=true`. ⚠️ Ne PAS « corriger » avec
-   `base64ToBinary` : ce n'est pas nécessaire et c'est un faux problème.
-   (Piège : la taille affichée du fichier stocké diffère de la sortie fonction —
-   c'est un **transcodage/re-compression bénin** du connecteur, PAS une
-   corruption. Vérifié : le xlsx s'ouvre et contient les bonnes données.)
-
-Le script de reconstruction déterministe de la définition (depuis une sauvegarde
-de l'original + ces 4 réglages) a été utilisé pendant la mise au point.
+## ✅ Détails de mise au point (les pièges résolus)
+1. **List folder / Get file content** — identificateurs **relatifs au site**
+   (PAS de `/sites/HQSupply` devant) ET **doublement encodés** :
+   - `…/folders/@{encodeURIComponent(encodeURIComponent('/Smart_Supply/Entrees-de-commandes/Commandes-PDF'))}`
+   - `…/files/@{encodeURIComponent(encodeURIComponent(item()?['Path']))}/content`
+   - (Simple encodage → 400 "Route did not match" ; avec `/sites/HQSupply` → 404.)
+2. **HTTP → fonction** — **retirer le mode « Chunked »** (`runtimeConfiguration`),
+   sinon la fonction reçoit un corps vide (400 "Corps de requête vide").
+3. **Créer le fichier** — laissé tel quel : corps `@body('HTTP')`, **Chunked
+   conservé**, `overwrite=true`. ⚠️ Ne PAS utiliser `base64ToBinary` (faux
+   problème). La différence de taille à l'écriture est un transcodage bénin, PAS
+   une corruption (xlsx vérifié : s'ouvre, 22 champs + données correctes).
+4. **Move file** (`moveFileAsync`) — corps JSON : `sourceFileId = @item()?['Id']`,
+   `destinationDataset` = URL du site, `destinationFolderPath` = chemin relatif au
+   site (`/Smart_Supply/Entrees-de-commandes/Commandes-Done` ou `…/A-revoir`),
+   `nameConflictBehavior = 2` (renommer si conflit → jamais d'échec/écrasement).
+   Le move **ne crée pas** le dossier de destination ; il doit exister.
+5. **Création de dossier** : l'op `CreateFolder` (`/folders`) **n'est PAS
+   implémentée** par le connecteur (500). Les dossiers ont été **créés à la main
+   dans SharePoint** (le sélecteur cassé ne concerne que le concepteur, pas
+   SharePoint web).
 
 ## SharePoint — chemins exacts
 - **Site** : `https://trbchemedica0.sharepoint.com/sites/HQSupply`
-- **Entrée** (PDF à traiter) : `/Smart_Supply/Entrees-de-commandes/Commandes-PDF`
-  *(identificateur relatif au site ; contient 1 PDF de test)*
-- **Sortie** (Excel CCI) : `Smart_Supply/Entrees-de-commandes/Uppload-CCI`
-- **« Traités »** (archive des originaux) : **pas encore créé** (nécessaire pour ne
-  pas retraiter les mêmes fichiers chaque jour à 15h).
-- ⚠️ Le connecteur SharePoint REST n'est pas accessible avec le jeton `az` (401 :
-  le tenant n'autorise pas l'app Azure CLI). Toute lecture/écriture SharePoint de
-  vérification se fait **via le connecteur du Logic App** (lui est autorisé).
+- Bibliothèque **Smart_Supply** → dossier **Entrees-de-commandes** contenant :
+  - **`Commandes-PDF`** — entrée (PDF à traiter)
+  - **`Uppload-CCI`** — sortie (Excel CCI), nom `CCI-<nomPDF>.xlsx`
+  - **`Commandes-Done`** — archive des PDF traités avec succès
+  - **`A-revoir`** — PDF illisibles / en erreur
+- Identifiants pour le connecteur = **relatifs au site**, ex.
+  `/Smart_Supply/Entrees-de-commandes/Commandes-PDF`.
 
-## Prochaines étapes (dans l'ordre)
-1. **Nettoyage** : supprimer les fichiers de test dans `Uppload-CCI`
-   (`CCI-RAWTEST.xlsx`, `CCI-VERIFY.xlsx`, et l'éventuel
-   `CCI-Commande_test_…pdf.xlsx`). À faire à la main dans SharePoint.
-2. **Phase 6 — « Traités »** : créer un dossier **« Traités »** et ajouter
-   **« Déplacer le fichier »** pour y déplacer l'original **après succès** (sinon
-   retraité chaque jour à 15h).
-3. **Gestion d'erreurs** : si la fonction renvoie **422** (document illisible) ou
-   une autre erreur, router le fichier vers un dossier **« À revoir »** et NE PAS
-   le déplacer dans « Traités » ; un fichier en échec ne doit pas faire échouer
-   tout le lot (configurer le `runAfter` / la portée).
-4. **Nommage de sortie** : actuellement `CCI-<nomPDF>.xlsx` (contient le `.pdf`
-   au milieu, moche). La fonction renvoie déjà un nom propre dans son en-tête
-   `Content-Disposition` (`CCI-AAAAMMJJ-HHMMSS.xlsx`) — on peut s'en servir, ou
-   retirer l'extension d'origine.
-5. (Plus tard) bouton de lancement manuel convivial pour les utilisateurs (flux
-   bouton séparé).
+## Comportement / points à connaître
+- Un lot contenant un fichier illisible apparaît **rouge** dans l'historique des
+  runs (l'action HTTP est en échec) — c'est **normal et utile** (« va voir
+  `A-revoir` ») ; les autres fichiers du lot sont quand même traités.
+- Si l'Excel de sortie est **ouvert dans Excel** au moment du run, l'écrasement
+  échoue (« already exists » = verrou) et le PDF n'est pas archivé (retraité au
+  run suivant). En production (15h), les sorties ne sont pas ouvertes → OK.
+- Claude lit très bien les scans « difficiles » : un PDF « peu lisible » mais
+  exploitable est traité normalement ; seuls les fichiers vraiment inexploitables
+  partent en `A-revoir`.
+
+## Prochaines étapes (optionnel / polissage)
+1. **Nettoyer les fichiers de test** (à la main dans SharePoint) :
+   - `A-revoir` : `test-illisible.pdf`
+   - `Uppload-CCI` : `CCI-VERIFY.xlsx`, `CCI-RAWTEST.xlsx`, `CCI-MOVETEST.xlsx`
+     (et les CCI de test si tu veux repartir propre).
+   - Replacer/retirer les PDF de test dans `Commandes-PDF` / `Commandes-Done`
+     selon ce que tu veux garder comme jeu d'essai.
+   - L'op connecteur **DeleteFile** existe (`DELETE /datasets/{dataset}/files/{id}`)
+     si on veut automatiser la suppression.
+2. **Nommage de sortie** : actuellement `CCI-<nomPDF>.xlsx` (contient le `.pdf`
+   au milieu). La fonction renvoie déjà un nom propre dans `Content-Disposition`
+   (`CCI-AAAAMMJJ-HHMMSS.xlsx`) — on peut s'en servir, ou retirer l'extension.
+3. (Plus tard) bouton de lancement manuel convivial (flux bouton séparé) ;
+   éventuellement distinguer 422 (illisible → A-revoir) des erreurs transitoires
+   (laisser en place pour réessai) via une condition sur le code HTTP.
 
 ## Docs de référence
-- **Connecteur SharePoint** (Logic Apps / Power Automate) : Microsoft Learn —
-  « SharePoint connector reference » (actions *List folder*, *Get files (properties
-  only)*, *Get file content*, *Create file*, *Move file*).
-- **Azure Logic Apps (Consumption)** : Microsoft Learn.
-- **La fonction et son contrat HTTP** : `cci-function/DEPLOIEMENT.md`.
-
-## Ce que je veux maintenant
-Aide-moi, **écran par écran** (je ne suis pas expert Azure), à continuer :
-1. nettoyer les fichiers de test,
-2. ajouter le déplacement vers « Traités » après succès,
-3. ajouter la gestion d'erreurs (422 → « À revoir »).
-Avance par petites étapes et demande-moi de confirmer chaque étape.
+- Connecteur SharePoint (Logic Apps) : Microsoft Learn « SharePoint connector
+  reference ». La **swagger** du connecteur s'exporte via
+  `az rest --method get --url ".../managedApis/sharepointonline?api-version=2018-07-01-preview&export=true"`.
+- La fonction et son contrat HTTP : `cci-function/DEPLOIEMENT.md`.
