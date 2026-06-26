@@ -133,3 +133,20 @@ Notes :
 
 - Fonction : republier l'app (voir `cci-function/DEPLOIEMENT.md`).
 - Logic App : via `az rest` (PUT de la définition), méthode déjà utilisée.
+
+## Amendements (après tests bout en bout, 2026-06-26)
+
+- **`incoterm_location` rendu OPTIONNEL** (≠ décision initiale « Strict »). Les
+  tests sur les vraies commandes ont montré qu'**aucune** ne porte le « Lieu de
+  l'incoterm » → la règle Strict rejetait 100 % des commandes. Validé par
+  l'utilisateur. Champs commande obligatoires retenus : `customer_name`,
+  `partner_reference`, `requested_delivery_date`, `destination`, + ≥1 produit valide.
+- **SKU — nomenclature précisée** : un **n° d'article CLIENT** (même à 4 chiffres,
+  ex. « ALP Article No. 2600 ») n'est **pas** un SKU TRB ; une réf produit à 6
+  chiffres non plus. L'IA renvoie `null` faute de SKU TRB fiable → A-revoir. Le
+  comportement prudent est **correct**. Le vrai correctif (réf produit → SKU TRB)
+  nécessite un **catalogue produits** : évolution future, hors de ce lot.
+- **Résultat validé** : lot de 5 docs → Excel `CCI-Lot-*.xlsx` à **2 lignes**
+  (NOVALP MEDICAL SA / SKU 4204 ; RheinCare / SKU 3100, 3101), cases master vides
+  surlignées jaune ; 3 docs (faux fichier, capture caviardée conf. 0.42, ALPINE
+  sans SKU TRB) correctement routés en `A-revoir`.

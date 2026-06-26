@@ -1,12 +1,17 @@
-"""Azure Function HTTP : document de commande -> Excel CCI.
+"""Azure Functions HTTP : extraction de commande + génération Excel CCI consolidé.
 
-Flux (un document par requête) :
-  1. lire le fichier reçu dans le corps de la requête
-  2. détecter le type (PDF / PNG / JPEG / TIFF) ; convertir TIFF -> PNG
-  3. extraire les données via Claude (forced tool call)
-  4. enrichir via le master data (client -> TVA, monnaie, incoterm…)
-  5. générer l'Excel avec openpyxl (format forcé)
-  6. renvoyer le .xlsx en corps de réponse
+Deux routes (auth FUNCTION) :
+
+  POST /api/extract  — un document par requête
+    1. lire le fichier reçu dans le corps de la requête
+    2. détecter le type (PDF / PNG / JPEG / TIFF) ; convertir TIFF -> PNG
+    3. extraire les données via Claude (forced tool call)
+    4. enrichir via le master data (client -> TVA, monnaie, incoterm…)
+    5. valider strictement (sinon 422 « A-revoir »)
+    6. renvoyer un record JSON (200) consommé par le Logic App
+
+  POST /api/build  — agrège plusieurs records en un seul Excel
+    Entrée : {"rows": [<record>, …]} ; sortie : .xlsx consolidé (1 ligne/record).
 
 Toutes les étapes sont loggées. Les erreurs renvoient un JSON propre (jamais de
 stack trace au client).
@@ -18,7 +23,6 @@ import base64
 import io
 import json
 import logging
-from datetime import datetime, timezone
 
 import azure.functions as func
 
@@ -30,7 +34,8 @@ from app.anthropic_client import (
     PdfSource,
     extract_order,
 )
-from app.excel_writer import build_workbook
+from app.excel_writer import build_consolidated_workbook
+from app.models import build_record, validate_order
 
 logger = logging.getLogger("cci")
 
@@ -146,34 +151,72 @@ def extract(req: func.HttpRequest) -> func.HttpResponse:
         order.customer_name, len(order.products), order.confidence, order.is_readable,
     )
 
-    # Document jugé illisible par Claude -> erreur identifiant le fichier.
-    if not order.is_readable:
+    # Validation stricte (règle « A-revoir »). Un client hors master data n'est
+    # PAS un motif de rejet : seuls les champs issus de la commande gatent ici.
+    reasons = validate_order(order)
+    if reasons:
+        raison = " ; ".join(reasons)
         return _json_error(
-            "Document jugé illisible par l'extraction — à router vers revue manuelle.",
+            "Commande à router vers revue manuelle (A-revoir).",
             422,
             file_name=file_name,
+            raison=raison,
             confiance=round(order.confidence, 2),
             note_qualite=order.quality_note,
         )
 
-    # Enrichissement master data (jointure sur le client).
+    # Enrichissement master data (jointure sur le client). Client introuvable ->
+    # champs None + statut « client introuvable », sans rejet (surlignage à /build).
     try:
         master = enrichment.enrich(order)
     except Exception:
         logger.exception("Erreur pendant l'enrichissement master data.")
         return _json_error("Erreur interne pendant l'enrichissement.", 500, file_name=file_name)
 
-    # Génération de l'Excel.
+    # Construire le record JSON (contrat consommé par le Logic App et /api/build).
+    record = build_record(order, master, file_name)
+    logger.info(
+        "Réponse 200 (record) : client=%r, master matched=%s",
+        record["customer_name"], record["master"]["matched"],
+    )
+    return func.HttpResponse(
+        json.dumps(record, ensure_ascii=False),
+        status_code=200,
+        mimetype="application/json",
+    )
+
+
+@app.route(route="build", methods=["POST"])
+def build(req: func.HttpRequest) -> func.HttpResponse:
+    """Agrège des records (issus de /api/extract) en un seul Excel consolidé.
+
+    Entrée : {"rows": [<record>, …]}. Sortie : .xlsx (1 ligne par record).
+    `rows` manquant -> 400. `rows` = [] -> classeur valide avec seulement l'en-tête.
+    """
     try:
-        xlsx_bytes = build_workbook(order, master, file_name)
+        payload = req.get_json()
+    except ValueError:
+        return _json_error("Corps JSON invalide : objet {\"rows\": [...]} attendu.", 400)
+
+    if not isinstance(payload, dict) or "rows" not in payload:
+        return _json_error("Champ 'rows' manquant dans le corps JSON.", 400)
+
+    rows = payload.get("rows")
+    if rows is None:
+        rows = []
+    if not isinstance(rows, list):
+        return _json_error("Le champ 'rows' doit être une liste de records.", 400)
+
+    logger.info("Build consolidé : %d record(s).", len(rows))
+
+    try:
+        xlsx_bytes = build_consolidated_workbook(rows)
     except Exception:
-        logger.exception("Erreur pendant la génération de l'Excel.")
-        return _json_error("Erreur interne pendant la génération de l'Excel.", 500, file_name=file_name)
+        logger.exception("Erreur pendant la génération de l'Excel consolidé.")
+        return _json_error("Erreur interne pendant la génération de l'Excel.", 500)
 
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
-    out_name = f"CCI-{stamp}.xlsx"
+    out_name = "CCI-Lot.xlsx"
     logger.info("Réponse 200 : %s (%d octets)", out_name, len(xlsx_bytes))
-
     return func.HttpResponse(
         body=xlsx_bytes,
         status_code=200,

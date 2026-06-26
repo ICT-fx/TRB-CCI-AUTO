@@ -22,6 +22,7 @@ Règles importantes :
 7. requested_delivery_date : renvoie au format ISO AAAA-MM-JJ si la date est sans ambiguïté ; sinon, renvoie la date telle qu'écrite.
 8. quantity doit être la quantité FINALE après toute correction manuscrite.
 9. La valeur du SKU (value) peut être 0 : c'est un cas valide, renvoie 0 et non null si une valeur nulle est explicitement indiquée.
+9bis. Le SKU est un code article NUMÉRIQUE à 4 chiffres (ex. "1234"). Si tu ne peux pas lire de façon fiable un code à exactement 4 chiffres, renvoie null pour ce sku. N'utilise JAMAIS un code client, un numéro de commande ou un autre nombre à la place du SKU.
 10. incoterm_location est le lieu associé à l'incoterm (ex. ville / port), s'il figure sur le document.
 11. destination est l'adresse / le lieu de livraison.
 12. Résume de façon concise toutes les remarques client, consignes de livraison, demandes urgentes ou d'emballage et notes manuscrites dans le champ "comments".
@@ -39,7 +40,12 @@ _PRODUCT_ITEM_SCHEMA = {
     "properties": {
         "sku": {
             "type": ["string", "null"],
-            "description": "Code SKU / référence article. null si absent.",
+            "pattern": "^[0-9]{4}$",
+            "description": (
+                "Code SKU / référence article : code NUMÉRIQUE à exactement 4 chiffres "
+                "(ex. \"1234\"). null si aucun code 4 chiffres fiable n'est lisible. "
+                "Jamais un code client ou un numéro de commande."
+            ),
         },
         "quantity": {
             "type": ["number", "null"],
