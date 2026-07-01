@@ -21,7 +21,7 @@ Règles importantes :
 4. N'invente jamais d'information. Si un champ ne peut pas être identifié avec une confiance raisonnable, renvoie null.
 5. Le nom du client / partenaire (customer_name) doit être extrait fidèlement : il sert à croiser avec une table de référence (master data).
 6. partner_reference est la référence de la commande côté partenaire (numéro de commande fournisseur).
-7. requested_delivery_date : renvoie au format ISO AAAA-MM-JJ si la date est sans ambiguïté ; sinon, renvoie la date telle qu'écrite.
+7. requested_delivery_date : si le JOUR, le mois et l'année sont connus, renvoie le format ISO AAAA-MM-JJ. Si SEULS le mois et l'année sont donnés (aucun jour précis), renvoie AAAA-MM (sans jour). Sinon, renvoie la date telle qu'écrite.
 8. quantity doit être la quantité FINALE après toute correction manuscrite.
 9. designation = le nom / la désignation du produit exactement comme écrit sur la commande (ex. "Vismed Multi 10", "Ostenil 1 seringue"). Extrais-le TOUJOURS quand une ligne produit existe : il sert à retrouver le bon SKU quand le SKU du client est faux ou absent.
 10. Le SKU est un code article NUMÉRIQUE à 4 chiffres (ex. "1234"). Extrais-le tel qu'il figure sur la commande. Beaucoup de clients envoient un SKU faux ou n'en mettent aucun : dans ce cas renvoie null pour le sku (il sera retrouvé via la désignation). N'utilise JAMAIS un code client, un numéro de commande ou un autre nombre à la place du SKU.
@@ -82,7 +82,7 @@ EXTRACT_ORDER_TOOL = {
             },
             "requested_delivery_date": {
                 "type": ["string", "null"],
-                "description": "Date de livraison souhaitée (ISO AAAA-MM-JJ si non ambiguë).",
+                "description": "Date de livraison souhaitée : ISO AAAA-MM-JJ si jour connu, sinon AAAA-MM si seuls mois+année.",
             },
             "products": {
                 "type": "array",

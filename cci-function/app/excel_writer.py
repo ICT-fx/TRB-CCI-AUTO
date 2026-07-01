@@ -1,13 +1,15 @@
 """Génération de l'Excel CCI avec openpyxl — format forcé, déterministe.
 
 Une ligne par commande : les champs d'en-tête une fois (champs extraits + code
-Customer « Clé 1 »), puis les produits étalés en colonnes
-(SKU i / Quantité i / SKU i (statut)), puis des colonnes de diagnostic.
+Customer « Clé 1 »), puis les produits étalés en colonnes (SKU i / Quantité i),
+puis la colonne « Nom du fichier » (nom composé client + date, pour retrouver la
+commande à la main).
 
 Le SKU écrit est le SKU RÉSOLU (correct, issu du catalogue du client). Seuls les
-SKU AMBIGUS (statut "ambigu" — l'IA a hésité entre plusieurs produits proches)
-sont surlignés jaune, pour revue rapide ; les corrections évidentes ne le sont
-pas. Claude n'écrit jamais ce fichier : le code impose mécaniquement les colonnes.
+SKU AMBIGUS (l'IA a hésité entre plusieurs produits proches) sont surlignés
+jaune = à vérifier ; les corrections évidentes ne le sont pas. Il n'y a plus de
+colonne de statut : le jaune est le seul signal. Claude n'écrit jamais ce
+fichier : le code impose mécaniquement les colonnes.
 """
 
 from __future__ import annotations
@@ -18,7 +20,7 @@ import re
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Font, PatternFill
 
-from .models import OrderExtraction, Resolution
+from .models import OrderExtraction, Resolution, suggested_filename
 
 SHEET_NAME = "CCI"
 _HEADER_FILL = "FF15578F"  # bleu TRB
@@ -28,11 +30,12 @@ _HIGHLIGHT_FILL = "FFFFFF00"  # jaune : à vérifier (SKU ambigu / Clé 1 vide)
 # Détecte une chaîne susceptible d'être interprétée comme formule par Excel.
 _FORMULA_PREFIX = re.compile(r"^[=+\-@\t\r]")
 
-# 3 colonnes par produit : SKU / Quantité / statut de résolution du SKU.
-_PRODUCT_COLS_PER_ITEM = 3
+# 2 colonnes par produit : SKU (résolu) / Quantité. Le statut n'est pas une
+# colonne : un SKU ambigu est simplement surligné jaune.
+_PRODUCT_COLS_PER_ITEM = 2
 
-# Colonnes de diagnostic (en fin de ligne).
-_DIAGNOSTIC_COLUMNS = ["Nom du fichier", "Confiance", "Statut", "Note qualité"]
+# Colonne de diagnostic (en fin de ligne) : le nom composé du fichier.
+_DIAGNOSTIC_COLUMNS = ["Nom du fichier"]
 
 
 def _safe_cell(value):
@@ -66,7 +69,7 @@ def _is_empty(value) -> bool:
 def _product_headers(max_products: int) -> list[str]:
     headers: list[str] = []
     for i in range(1, max_products + 1):
-        headers += [f"SKU {i}", f"Quantité {i}", f"SKU {i} (statut)"]
+        headers += [f"SKU {i}", f"Quantité {i}"]
     return headers
 
 
@@ -104,17 +107,12 @@ _FIXED_HEADER_COLUMNS: list[tuple[str, object]] = [
 _CLE1_LABEL = "Clé 1"
 
 
-def _resolution(record: dict) -> dict:
-    r = record.get("resolution")
-    return r if isinstance(r, dict) else {}
-
-
 def build_consolidated_workbook(rows: list[dict]) -> bytes:
     """Construit l'Excel CCI consolidé : 1 feuille, 1 ligne par record.
 
-    Colonnes : en-têtes fixes, puis `SKU i / Quantité i / SKU i (statut)` pour
-    i = 1..MAX, puis diagnostic. Les SKU ambigus (statut "ambigu") et une Clé 1
-    manquante sont surlignés jaune.
+    Colonnes : en-têtes fixes, puis `SKU i / Quantité i` pour i = 1..MAX, puis
+    « Nom du fichier ». Les SKU ambigus et une Clé 1 manquante sont surlignés
+    jaune.
 
     `rows` vide ⇒ classeur valide avec uniquement les en-têtes.
     """
@@ -137,24 +135,18 @@ def build_consolidated_workbook(rows: list[dict]) -> bytes:
     yellow = PatternFill("solid", fgColor=_HIGHLIGHT_FILL)
 
     for record in rows:
-        res = _resolution(record)
         values: list = [getter(record) for _, getter in fixed]
         products = record.get("products") or []
         statuses: list[str | None] = []
         for i in range(max_products):
             if i < len(products):
                 p = products[i] or {}
-                values += [p.get("sku"), p.get("quantity"), p.get("sku_status")]
+                values += [p.get("sku"), p.get("quantity")]
                 statuses.append(p.get("sku_status"))
             else:
-                values += [None, None, None]
+                values += [None, None]
                 statuses.append(None)
-        values += [
-            record.get("filename"),
-            record.get("confidence"),
-            res.get("status") or "OK",
-            record.get("quality_note"),
-        ]
+        values += [record.get("suggested_filename") or record.get("filename")]
 
         ws.append([_safe_cell(v) for v in values])
         row_idx = ws.max_row
@@ -189,13 +181,8 @@ def build_workbook(
 
     row: list = [getter(order, resolution) for _, getter in _HEADER_COLUMNS]
     for p in order.products:
-        row += [p.resolved_sku, p.quantity, p.sku_status]
-    row += [
-        file_name,
-        round(order.confidence, 2),
-        resolution.status or ("OK" if order.is_readable else "document peu lisible"),
-        order.quality_note,
-    ]
+        row += [p.resolved_sku, p.quantity]
+    row += [suggested_filename(order.customer_name, order.requested_delivery_date, file_name)]
     ws.append([_safe_cell(v) for v in row])
     row_idx = ws.max_row
 

@@ -8,12 +8,37 @@ champ ici impose de toucher le schéma (schema.py) et l'écriture Excel
 
 from __future__ import annotations
 
+import os
 import re
 from dataclasses import dataclass, field
 from typing import Optional
 
 # Un SKU valide est un code numérique à exactement 4 chiffres.
 _SKU_RE = re.compile(r"^\d{4}$")
+
+# Caractères interdits dans un nom de fichier (SharePoint / Windows).
+_ILLEGAL_FILENAME = re.compile(r'[\\/:*?"<>|\r\n\t]')
+
+
+def suggested_filename(
+    customer_name: Optional[str],
+    delivery_date: Optional[str],
+    original_filename: Optional[str],
+) -> str:
+    """Nom composé « <client> - <JJ-MM-AAAA> » + extension d'origine.
+
+    Sert à renommer le document une fois traité (dossiers Done / A-revoir) et
+    alimente la colonne « Nom du fichier » de l'Excel, pour retrouver la commande
+    à la main. Retombe sur le nom d'origine si le client ou la date manque.
+    """
+    name = _ILLEGAL_FILENAME.sub(" ", (customer_name or "").strip())
+    name = re.sub(r"\s+", " ", name).strip()
+    date_part = (delivery_date or "").strip().replace("/", "-")
+    parts = [p for p in (name, date_part) if p]
+    ext = os.path.splitext(original_filename or "")[1]
+    if not parts:
+        return original_filename or "commande"
+    return " - ".join(parts) + ext
 
 
 @dataclass
@@ -180,6 +205,9 @@ def build_record(
             "status": resolution.status,
         },
         "filename": file_name,
+        "suggested_filename": suggested_filename(
+            order.customer_name, order.requested_delivery_date, file_name
+        ),
         "confidence": round(order.confidence, 2),
         "quality_note": order.quality_note,
     }

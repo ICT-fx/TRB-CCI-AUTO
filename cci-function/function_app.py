@@ -38,7 +38,12 @@ from app.anthropic_client import (
     extract_order,
 )
 from app.excel_writer import build_consolidated_workbook
-from app.models import build_record, validate_order, validate_resolution
+from app.models import (
+    build_record,
+    suggested_filename,
+    validate_order,
+    validate_resolution,
+)
 
 logger = logging.getLogger("cci")
 
@@ -163,6 +168,9 @@ def extract(req: func.HttpRequest) -> func.HttpResponse:
             "Commande à router vers revue manuelle (A-revoir).",
             422,
             file_name=file_name,
+            suggested_filename=suggested_filename(
+                order.customer_name, order.requested_delivery_date, file_name
+            ),
             raison=raison,
             confiance=round(order.confidence, 2),
             note_qualite=order.quality_note,
@@ -189,6 +197,9 @@ def extract(req: func.HttpRequest) -> func.HttpResponse:
             "Commande à router vers revue manuelle (A-revoir).",
             422,
             file_name=file_name,
+            suggested_filename=suggested_filename(
+                order.customer_name, order.requested_delivery_date, file_name
+            ),
             raison=raison,
             confiance=round(order.confidence, 2),
             note_qualite=order.quality_note,

@@ -7,7 +7,9 @@ si le modèle omet des champs.
 
 from __future__ import annotations
 
+import datetime
 import logging
+import re
 from dataclasses import dataclass
 from typing import Literal, Union
 
@@ -171,6 +173,46 @@ def resolve_order(order: OrderExtraction, master_context: str) -> dict:
     return tool_use.input or {}
 
 
+def _first_business_day(year: int, month: int) -> datetime.date:
+    """1er jour du mois, décalé au lundi si c'est un samedi/dimanche."""
+    d = datetime.date(year, month, 1)
+    while d.weekday() >= 5:  # 5 = samedi, 6 = dimanche
+        d += datetime.timedelta(days=1)
+    return d
+
+
+def _format_delivery_date(raw) -> str | None:
+    """Normalise la date de livraison au format strict JJ/MM/AAAA.
+
+    - AAAA-MM-JJ  -> JJ/MM/AAAA
+    - AAAA-MM     -> 1er jour ouvré du mois, au format JJ/MM/AAAA
+    - JJ/MM/AAAA  -> inchangé
+    - autre       -> renvoyé tel quel (dernier recours)
+    """
+    if raw is None:
+        return None
+    s = str(raw).strip()
+    if not s:
+        return None
+    m = re.fullmatch(r"(\d{4})-(\d{2})-(\d{2})", s)
+    if m:
+        y, mo, dd = (int(x) for x in m.groups())
+        try:
+            return datetime.date(y, mo, dd).strftime("%d/%m/%Y")
+        except ValueError:
+            return s
+    m = re.fullmatch(r"(\d{4})-(\d{2})", s)
+    if m:
+        y, mo = (int(x) for x in m.groups())
+        try:
+            return _first_business_day(y, mo).strftime("%d/%m/%Y")
+        except ValueError:
+            return s
+    if re.fullmatch(r"\d{2}/\d{2}/\d{4}", s):
+        return s
+    return s
+
+
 def _coerce_number(value) -> float | None:
     """Renvoie un float si possible (0 conservé), sinon None."""
     if isinstance(value, bool):  # bool est sous-classe d'int : à exclure
@@ -203,7 +245,7 @@ def _normalize(raw: dict) -> OrderExtraction:
     return OrderExtraction(
         customer_name=raw.get("customer_name"),
         partner_reference=raw.get("partner_reference"),
-        requested_delivery_date=raw.get("requested_delivery_date"),
+        requested_delivery_date=_format_delivery_date(raw.get("requested_delivery_date")),
         products=products,
         comments=raw.get("comments"),
         confidence=confidence,
