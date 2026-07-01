@@ -17,26 +17,30 @@ from openpyxl import load_workbook
 
 from app import enrichment
 from app.excel_writer import build_workbook
-from app.models import OrderExtraction, ProductLine
+from app.models import OrderExtraction, ProductLine, validate_order
 
 
 def main() -> int:
     # Commande fabriquée : client présent dans le master data d'exemple.
+    # Seuls les champs réellement extraits du document sont peuplés :
+    # nom du client, référence partenaire, date de livraison, SKU + quantité.
     order = OrderExtraction(
         customer_name="pharmacie centrale sa",  # casse/espaces volontairement différents
         partner_reference="PO-2026-00042",
         requested_delivery_date="2026-07-15",
-        incoterm_location="Genève",
-        destination="Pharmacie Centrale, Rue du Marché 1, 1204 Genève",
         products=[
-            ProductLine(sku="1234", quantity=75, value=120.50),
-            ProductLine(sku="5678", quantity=10, value=0),  # valeur 0 = cas valide
+            ProductLine(sku="1234", quantity=75),
+            ProductLine(sku="5678", quantity=10),
         ],
         comments="=SUM(A1:A9) — test anti-injection de formule",  # doit être neutralisé
         confidence=0.92,
         is_readable=True,
         quality_note=None,
     )
+
+    # La validation « A-revoir » stricte accepte une commande à 5 champs.
+    reasons = validate_order(order)
+    assert reasons == [], f"La commande valide ne devrait pas être rejetée : {reasons}"
 
     master = enrichment.enrich(order)
     print(f"Enrichissement : matched={master.matched}, statut={master.status!r}")
@@ -67,7 +71,8 @@ def main() -> int:
     assert row["Numéro de TVA"], "TVA absente de la sortie."
     assert row["Monnaie comptable"] == "CHF"
     assert row["SKU 1"] == "1234"
-    assert row["Valeur 2"] == 0, "La valeur 0 doit être conservée, pas vidée."
+    assert row["Quantité 1"] == 75
+    assert str(row["Valeur 1"] or "") == "", "La valeur n'est plus extraite -> colonne vide attendue."
     assert str(row["Note qualité"] or "") == "", "quality_note None -> cellule vide attendue."
     # Anti-injection : la cellule commençant par '=' doit être préfixée d'une apostrophe.
     # (openpyxl restitue la valeur stockée, apostrophe comprise.)

@@ -10,7 +10,9 @@ ensemble quand on change ce qui est extrait.
 
 EXTRACTION_SYSTEM_PROMPT = """Tu es un assistant expert en traitement de commandes pour TRB Chemedica (Genève, Suisse).
 
-Analyse le document de commande client fourni et extrais toutes les informations disponibles via l'outil "extract_order".
+Analyse le document de commande client fourni et extrais les informations demandées via l'outil "extract_order".
+
+Tu ne dois extraire du document QUE ces informations : le nom du client, la référence partenaire, la date de livraison souhaitée, et pour chaque ligne produit le SKU (4 chiffres) et la quantité.
 
 Règles importantes :
 1. Si une valeur a été raturée puis réécrite à la main, utilise TOUJOURS la valeur manuscrite corrigée la plus récente. Exemple : si une quantité "50" est barrée et "75" écrit à la main à côté, extrais 75.
@@ -21,16 +23,13 @@ Règles importantes :
 6. partner_reference est la référence de la commande côté partenaire (numéro de commande fournisseur).
 7. requested_delivery_date : renvoie au format ISO AAAA-MM-JJ si la date est sans ambiguïté ; sinon, renvoie la date telle qu'écrite.
 8. quantity doit être la quantité FINALE après toute correction manuscrite.
-9. La valeur du SKU (value) peut être 0 : c'est un cas valide, renvoie 0 et non null si une valeur nulle est explicitement indiquée.
-9bis. Le SKU est un code article NUMÉRIQUE à 4 chiffres (ex. "1234"). Si tu ne peux pas lire de façon fiable un code à exactement 4 chiffres, renvoie null pour ce sku. N'utilise JAMAIS un code client, un numéro de commande ou un autre nombre à la place du SKU.
-10. incoterm_location est le lieu associé à l'incoterm (ex. ville / port), s'il figure sur le document.
-11. destination est l'adresse / le lieu de livraison.
-12. Résume de façon concise toutes les remarques client, consignes de livraison, demandes urgentes ou d'emballage et notes manuscrites dans le champ "comments".
-13. Les documents peuvent mélanger les langues (FR, DE, EN, IT). Gère-les toutes.
-14. Mets "is_readable" à false uniquement si le document est trop dégradé pour une extraction fiable.
-15. Mets "confidence" entre 0 et 1 selon ta confiance globale dans l'extraction.
+9. Le SKU est un code article NUMÉRIQUE à 4 chiffres (ex. "1234"). Si tu ne peux pas lire de façon fiable un code à exactement 4 chiffres, renvoie null pour ce sku. N'utilise JAMAIS un code client, un numéro de commande ou un autre nombre à la place du SKU.
+10. Résume de façon concise toutes les remarques client, consignes de livraison, demandes urgentes ou d'emballage et notes manuscrites dans le champ "comments".
+11. Les documents peuvent mélanger les langues (FR, DE, EN, IT). Gère-les toutes.
+12. Mets "is_readable" à false uniquement si le document est trop dégradé pour une extraction fiable.
+13. Mets "confidence" entre 0 et 1 selon ta confiance globale dans l'extraction.
 
-Ne renvoie PAS la monnaie, les conditions de paiement, le numéro de TVA ou l'incoterm : ces champs proviennent d'une table de référence interne, pas du document."""
+N'extrais PAS du document : l'adresse / le lieu de livraison, le lieu de l'incoterm, la valeur ou le prix des articles, la monnaie, les conditions de paiement, le numéro de TVA ni l'incoterm. Ces champs ne sont pas requis ou proviennent d'une table de référence interne, jamais du document."""
 
 
 # Schéma d'une ligne produit. Types en union ["...", "null"] (non-strict) pour
@@ -51,12 +50,8 @@ _PRODUCT_ITEM_SCHEMA = {
             "type": ["number", "null"],
             "description": "Quantité finale après corrections manuscrites. null si absente.",
         },
-        "value": {
-            "type": ["number", "null"],
-            "description": "Valeur / prix du SKU (>= 0). 0 est une valeur valide. null si absente.",
-        },
     },
-    "required": ["sku", "quantity", "value"],
+    "required": ["sku", "quantity"],
 }
 
 
@@ -80,14 +75,6 @@ EXTRACT_ORDER_TOOL = {
             "requested_delivery_date": {
                 "type": ["string", "null"],
                 "description": "Date de livraison souhaitée (ISO AAAA-MM-JJ si non ambiguë).",
-            },
-            "incoterm_location": {
-                "type": ["string", "null"],
-                "description": "Lieu associé à l'incoterm (ville / port), si présent.",
-            },
-            "destination": {
-                "type": ["string", "null"],
-                "description": "Adresse / lieu de livraison.",
             },
             "products": {
                 "type": "array",
@@ -115,8 +102,6 @@ EXTRACT_ORDER_TOOL = {
             "customer_name",
             "partner_reference",
             "requested_delivery_date",
-            "incoterm_location",
-            "destination",
             "products",
             "comments",
             "confidence",

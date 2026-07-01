@@ -18,11 +18,10 @@ _SKU_RE = re.compile(r"^\d{4}$")
 
 @dataclass
 class ProductLine:
-    """Une ligne produit (SKU) du document. La valeur peut être 0 (cas valide)."""
+    """Une ligne produit du document : un SKU (4 chiffres) et sa quantité."""
 
     sku: Optional[str] = None
     quantity: Optional[float] = None
-    value: Optional[float] = None
 
 
 @dataclass
@@ -34,13 +33,11 @@ class OrderExtraction:
     enrichment.py et portés par `MasterDataFields`.
     """
 
-    # Source = Commande
+    # Source = Commande (seuls champs lus sur le document)
     customer_name: Optional[str] = None          # #3 — clé de jointure master data
     partner_reference: Optional[str] = None       # #4 — n° commande fournisseur
     requested_delivery_date: Optional[str] = None  # #9
-    incoterm_location: Optional[str] = None        # #15
-    destination: Optional[str] = None              # #17
-    products: list[ProductLine] = field(default_factory=list)  # #20-22
+    products: list[ProductLine] = field(default_factory=list)  # #20-21 (SKU + quantité)
 
     # Diagnostic (renvoyé par Claude, non destiné à l'ERP)
     comments: Optional[str] = None
@@ -78,10 +75,6 @@ _REQUIRED_ORDER_FIELDS: list[tuple[str, str]] = [
     ("customer_name", "nom du client"),
     ("partner_reference", "référence partenaire"),
     ("requested_delivery_date", "date de livraison souhaitée"),
-    ("destination", "destination"),
-    # NB : "incoterm_location" (lieu de l'incoterm) est volontairement OPTIONNEL :
-    # les commandes réelles ne le portent pas. Le re-rendre obligatoire rejetterait
-    # toutes les commandes.
 ]
 
 
@@ -101,8 +94,7 @@ def validate_order(order: OrderExtraction) -> list[str]:
       - is_readable == False
       - un des champs commande obligatoires vide / None / blanc
       - aucun produit, OU un produit avec sku non conforme à ^\\d{4}$,
-        quantity non numérique ou <= 0, value non numérique ou < 0
-        (null/None interdit ; 0 autorisé pour value).
+        ou quantity non numérique ou <= 0 (null/None interdit).
 
     NB : le master data (client introuvable) n'intervient pas ici.
     """
@@ -120,7 +112,6 @@ def validate_order(order: OrderExtraction) -> list[str]:
     else:
         bad_sku = False
         bad_qty = False
-        bad_val = False
         for p in order.products:
             sku = p.sku
             if not (isinstance(sku, str) and _SKU_RE.match(sku)):
@@ -128,15 +119,10 @@ def validate_order(order: OrderExtraction) -> list[str]:
             qty = p.quantity
             if isinstance(qty, bool) or not isinstance(qty, (int, float)) or qty <= 0:
                 bad_qty = True
-            val = p.value
-            if isinstance(val, bool) or not isinstance(val, (int, float)) or val < 0:
-                bad_val = True
         if bad_sku:
             reasons.append("SKU non conforme (4 chiffres requis)")
         if bad_qty:
             reasons.append("quantité invalide (> 0 requis)")
-        if bad_val:
-            reasons.append("valeur invalide (>= 0 requise)")
 
     return reasons
 
@@ -153,10 +139,8 @@ def build_record(
         "customer_name": order.customer_name,
         "partner_reference": order.partner_reference,
         "requested_delivery_date": order.requested_delivery_date,
-        "incoterm_location": order.incoterm_location,
-        "destination": order.destination,
         "products": [
-            {"sku": p.sku, "quantity": p.quantity, "value": p.value}
+            {"sku": p.sku, "quantity": p.quantity}
             for p in order.products
         ],
         "master": {

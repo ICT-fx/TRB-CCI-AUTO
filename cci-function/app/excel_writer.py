@@ -64,9 +64,9 @@ _HEADER_COLUMNS: list[tuple[str, object]] = [
     ("Délai de livraison", lambda o, m: None),        # à déterminer
     ("Mode d'expédition", lambda o, m: m.mode_expedition),
     ("Incoterm", lambda o, m: m.incoterm),
-    ("Lieu de l'incoterm", lambda o, m: o.incoterm_location),
+    ("Lieu de l'incoterm", lambda o, m: None),  # non extrait du document
     ("Lieu de provenance", lambda o, m: m.lieu_provenance),
-    ("Destination", lambda o, m: o.destination),
+    ("Destination", lambda o, m: None),          # non extrait du document
     ("Destination EDI", lambda o, m: m.destination_edi),
     ("Stock logique", lambda o, m: None),             # à déterminer
 ]
@@ -93,9 +93,9 @@ _FIXED_HEADER_COLUMNS: list[tuple[str, object]] = [
     ("Délai de livraison", lambda r: None),        # à déterminer
     ("Mode d'expédition", lambda r: _master(r).get("mode_expedition")),
     ("Incoterm", lambda r: _master(r).get("incoterm")),
-    ("Lieu de l'incoterm", lambda r: r.get("incoterm_location")),
+    ("Lieu de l'incoterm", lambda r: None),  # non extrait du document
     ("Lieu de provenance", lambda r: _master(r).get("lieu_provenance")),
-    ("Destination", lambda r: r.get("destination")),
+    ("Destination", lambda r: None),          # non extrait du document
     ("Destination EDI", lambda r: _master(r).get("destination_edi")),
     ("Stock logique", lambda r: None),             # à déterminer
 ]
@@ -168,7 +168,7 @@ def build_consolidated_workbook(rows: list[dict]) -> bytes:
         for i in range(max_products):
             if i < len(products):
                 p = products[i] or {}
-                values += [p.get("sku"), p.get("quantity"), p.get("value")]
+                values += [p.get("sku"), p.get("quantity"), None]  # Valeur non extraite
             else:
                 values += [None, None, None]
         values += [
@@ -224,7 +224,7 @@ def build_workbook(
     # 2) Ligne de données.
     row: list = [getter(order, master) for _, getter in _HEADER_COLUMNS]
     for product in order.products:
-        row += [product.sku, product.quantity, product.value]
+        row += [product.sku, product.quantity, None]  # Valeur non extraite
     row += [
         file_name,
         round(order.confidence, 2),

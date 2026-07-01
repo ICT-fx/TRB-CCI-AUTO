@@ -141,7 +141,6 @@ def _normalize(raw: dict) -> OrderExtraction:
                 ProductLine(
                     sku=p.get("sku"),
                     quantity=_coerce_number(p.get("quantity")),
-                    value=_coerce_number(p.get("value")),
                 )
             )
 
@@ -152,8 +151,6 @@ def _normalize(raw: dict) -> OrderExtraction:
         customer_name=raw.get("customer_name"),
         partner_reference=raw.get("partner_reference"),
         requested_delivery_date=raw.get("requested_delivery_date"),
-        incoterm_location=raw.get("incoterm_location"),
-        destination=raw.get("destination"),
         products=products,
         comments=raw.get("comments"),
         confidence=confidence,
