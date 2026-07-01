@@ -64,18 +64,21 @@ def main() -> int:
     for h, v in zip(headers, data):
         print(f"  {h:32} = {v!r}")
 
-    # Vérifications clés.
+    # Vérifications clés : l'Excel ne contient que les champs extraits + Clé 1 + diagnostic.
     row = dict(zip(headers, data))
-    assert row["Type de document"] == "Commande Client"
+    # Colonnes retirées : plus aucune donnée master data ni Valeur dans l'Excel.
+    for removed in ("Type de document", "Numéro de TVA", "Monnaie comptable", "Destination", "Valeur 1"):
+        assert removed not in headers, f"Colonne {removed!r} aurait dû être retirée."
+    # Champs extraits présents.
     assert row["Nom du client"] == "pharmacie centrale sa"
-    assert row["Numéro de TVA"], "TVA absente de la sortie."
-    assert row["Monnaie comptable"] == "CHF"
+    assert row["Référence partenaire"] == "PO-2026-00042"
+    assert row["Date de livraison souhaitée"] == "2026-07-15"
     assert row["SKU 1"] == "1234"
     assert row["Quantité 1"] == 75
-    assert str(row["Valeur 1"] or "") == "", "La valeur n'est plus extraite -> colonne vide attendue."
+    # Clé 1 : colonne présente mais vide (master data pas encore fourni).
+    assert "Clé 1" in headers, "La colonne 'Clé 1' (code Customer) doit exister."
+    assert str(row["Clé 1"] or "") == "", "'Clé 1' doit rester vide tant que le master data n'est pas fourni."
     assert str(row["Note qualité"] or "") == "", "quality_note None -> cellule vide attendue."
-    # Anti-injection : la cellule commençant par '=' doit être préfixée d'une apostrophe.
-    # (openpyxl restitue la valeur stockée, apostrophe comprise.)
     assert str(row["Confiance"]) == "0.92"
 
     print("\nOK — tous les contrôles passent.")

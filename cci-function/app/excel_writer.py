@@ -1,8 +1,8 @@
 """Génération de l'Excel CCI avec openpyxl — format forcé, déterministe.
 
-Une ligne par commande : tous les champs d'en-tête une fois, puis les produits
-étalés en colonnes (SKU 1 / Quantité 1 / Valeur 1, SKU 2 / …), puis des colonnes
-de diagnostic. L'ordre des colonnes suit la spec Donnees_CCI.xlsx (#1 → #22).
+Une ligne par commande : les champs d'en-tête une fois (uniquement ceux extraits
+du document + la clé client), puis les produits étalés en colonnes
+(SKU 1 / Quantité 1, SKU 2 / …), puis des colonnes de diagnostic.
 
 Claude n'écrit jamais ce fichier : le code impose mécaniquement les colonnes.
 """
@@ -15,7 +15,6 @@ import re
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Font, PatternFill
 
-from . import config
 from .models import MasterDataFields, OrderExtraction
 
 SHEET_NAME = "CCI"
@@ -47,28 +46,14 @@ def _safe_cell(value):
     return text
 
 
-# Colonnes d'en-tête (une valeur par commande), dans l'ordre de la spec.
-# (libellé, fonction extrayant la valeur depuis (order, md))
+# Colonnes d'en-tête (une valeur par commande) : uniquement les champs extraits
+# du document + la clé client. (libellé, fonction extrayant la valeur depuis (order, md))
+# « Clé 1 » = code Customer, à renseigner depuis le master data (vide pour l'instant).
 _HEADER_COLUMNS: list[tuple[str, object]] = [
-    ("Type de document", lambda o, m: config.DOCUMENT_TYPE),
-    ("Description gabarit", lambda o, m: config.DOCUMENT_TEMPLATE_DESCRIPTION),
     ("Nom du client", lambda o, m: o.customer_name),
+    ("Clé 1", lambda o, m: None),  # code Customer (master data) — vide tant que non fourni
     ("Référence partenaire", lambda o, m: o.partner_reference),
-    ("Numéro de TVA", lambda o, m: m.numero_tva),
-    ("Monnaie comptable", lambda o, m: m.monnaie),
-    ("Conditions de paiement (jours)", lambda o, m: m.conditions_paiement_jours),
-    ("Assurance", lambda o, m: m.assurance),
     ("Date de livraison souhaitée", lambda o, m: o.requested_delivery_date),
-    ("Délai de disponibilité", lambda o, m: None),   # à déterminer
-    ("Délai d'expédition", lambda o, m: None),        # à déterminer
-    ("Délai de livraison", lambda o, m: None),        # à déterminer
-    ("Mode d'expédition", lambda o, m: m.mode_expedition),
-    ("Incoterm", lambda o, m: m.incoterm),
-    ("Lieu de l'incoterm", lambda o, m: None),  # non extrait du document
-    ("Lieu de provenance", lambda o, m: m.lieu_provenance),
-    ("Destination", lambda o, m: None),          # non extrait du document
-    ("Destination EDI", lambda o, m: m.destination_edi),
-    ("Stock logique", lambda o, m: None),             # à déterminer
 ]
 
 # Colonnes de diagnostic (en fin de ligne).
@@ -76,40 +61,17 @@ _DIAGNOSTIC_COLUMNS = ["Nom du fichier", "Confiance", "Statut", "Note qualité"]
 
 
 # --- Variante consolidée (multi-ligne, depuis des records dict) -----------
-# Les 19 colonnes d'en-tête fixes, dans l'ordre, avec la fonction qui en extrait
-# la valeur depuis un record (dict). Les colonnes master data lisent record["master"].
+# Mêmes colonnes fixes, extraites depuis un record (dict).
 _FIXED_HEADER_COLUMNS: list[tuple[str, object]] = [
-    ("Type de document", lambda r: config.DOCUMENT_TYPE),
-    ("Description gabarit", lambda r: config.DOCUMENT_TEMPLATE_DESCRIPTION),
     ("Nom du client", lambda r: r.get("customer_name")),
+    ("Clé 1", lambda r: None),  # code Customer (master data) — vide tant que non fourni
     ("Référence partenaire", lambda r: r.get("partner_reference")),
-    ("Numéro de TVA", lambda r: _master(r).get("numero_tva")),
-    ("Monnaie comptable", lambda r: _master(r).get("monnaie")),
-    ("Conditions de paiement (jours)", lambda r: _master(r).get("conditions_paiement_jours")),
-    ("Assurance", lambda r: _master(r).get("assurance")),
     ("Date de livraison souhaitée", lambda r: r.get("requested_delivery_date")),
-    ("Délai de disponibilité", lambda r: None),   # à déterminer
-    ("Délai d'expédition", lambda r: None),        # à déterminer
-    ("Délai de livraison", lambda r: None),        # à déterminer
-    ("Mode d'expédition", lambda r: _master(r).get("mode_expedition")),
-    ("Incoterm", lambda r: _master(r).get("incoterm")),
-    ("Lieu de l'incoterm", lambda r: None),  # non extrait du document
-    ("Lieu de provenance", lambda r: _master(r).get("lieu_provenance")),
-    ("Destination", lambda r: None),          # non extrait du document
-    ("Destination EDI", lambda r: _master(r).get("destination_edi")),
-    ("Stock logique", lambda r: None),             # à déterminer
 ]
 
-# Libellés des 8 colonnes master data : leurs cellules vides sont surlignées jaune.
+# Colonnes master data dont la cellule vide est surlignée jaune (« à compléter »).
 _MASTER_HIGHLIGHT_LABELS = {
-    "Numéro de TVA",
-    "Monnaie comptable",
-    "Conditions de paiement (jours)",
-    "Assurance",
-    "Mode d'expédition",
-    "Incoterm",
-    "Lieu de provenance",
-    "Destination EDI",
+    "Clé 1",
 }
 
 
@@ -130,7 +92,7 @@ def _is_empty(value) -> bool:
 def build_consolidated_workbook(rows: list[dict]) -> bytes:
     """Construit l'Excel CCI consolidé : 1 feuille, 1 ligne par record.
 
-    Colonnes : 19 en-têtes fixes, puis `SKU i / Quantité i / Valeur i` pour
+    Colonnes : les en-têtes fixes, puis `SKU i / Quantité i` pour
     i = 1..MAX (MAX = nb max de produits dans le lot, au moins 1), puis les
     colonnes de diagnostic. Les cellules master data vides sont surlignées jaune.
 
@@ -148,7 +110,7 @@ def build_consolidated_workbook(rows: list[dict]) -> bytes:
     # 1) En-têtes.
     headers: list[str] = [label for label, _ in _FIXED_HEADER_COLUMNS]
     for i in range(1, max_products + 1):
-        headers += [f"SKU {i}", f"Quantité {i}", f"Valeur {i}"]
+        headers += [f"SKU {i}", f"Quantité {i}"]
     headers += _DIAGNOSTIC_COLUMNS
     ws.append(headers)
 
@@ -168,9 +130,9 @@ def build_consolidated_workbook(rows: list[dict]) -> bytes:
         for i in range(max_products):
             if i < len(products):
                 p = products[i] or {}
-                values += [p.get("sku"), p.get("quantity"), None]  # Valeur non extraite
+                values += [p.get("sku"), p.get("quantity")]
             else:
-                values += [None, None, None]
+                values += [None, None]
         values += [
             record.get("filename"),
             record.get("confidence"),
@@ -217,14 +179,14 @@ def build_workbook(
     # 1) En-têtes : champs d'en-tête + N groupes produit + diagnostic.
     headers: list[str] = [label for label, _ in _HEADER_COLUMNS]
     for i in range(1, len(order.products) + 1):
-        headers += [f"SKU {i}", f"Quantité {i}", f"Valeur {i}"]
+        headers += [f"SKU {i}", f"Quantité {i}"]
     headers += _DIAGNOSTIC_COLUMNS
     ws.append(headers)
 
     # 2) Ligne de données.
     row: list = [getter(order, master) for _, getter in _HEADER_COLUMNS]
     for product in order.products:
-        row += [product.sku, product.quantity, None]  # Valeur non extraite
+        row += [product.sku, product.quantity]
     row += [
         file_name,
         round(order.confidence, 2),
