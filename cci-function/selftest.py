@@ -40,8 +40,9 @@ def _fake_resolution(customer_code, lines):
 
 def main() -> int:
     # Commande fabriquée pour un client réel du master data (Dea Lens Project,
-    # Clé 1 = 2780008). Le nom diffère un peu et le 1er SKU est FAUX -> doit être
-    # corrigé en 1311 via la désignation ; le 2e est correct (1136).
+    # Clé 1 = 2780008). 1re ligne : nom AMBIGU (plusieurs "Vismed Multi 10" au
+    # catalogue) -> à vérifier (jaune). 2e ligne : SKU absent mais correspondance
+    # évidente -> corrigé SANS surlignage.
     # customer_name commence par '=' pour tester l'anti-injection de formule.
     order = OrderExtraction(
         customer_name="=Dea Lens Project",
@@ -49,7 +50,7 @@ def main() -> int:
         requested_delivery_date="2026-07-15",
         products=[
             ProductLine(designation="Vismed Multi 10", sku="9999", quantity=100),
-            ProductLine(designation="Vismed 20", sku="1136", quantity=50),
+            ProductLine(designation="Vismed 20", sku=None, quantity=50),
         ],
         comments="commande de test",
         confidence=0.92,
@@ -64,8 +65,8 @@ def main() -> int:
     anthropic_client.resolve_order = _fake_resolution(
         "2780008",
         [
-            {"designation": "Vismed Multi 10", "input_sku": "9999", "resolved_sku": "1311", "status": "corrige"},
-            {"designation": "Vismed 20", "input_sku": "1136", "resolved_sku": "1136", "status": "ok"},
+            {"designation": "Vismed Multi 10", "input_sku": "9999", "resolved_sku": "1311", "status": "ambigu"},
+            {"designation": "Vismed 20", "input_sku": None, "resolved_sku": "1136", "status": "corrige"},
         ],
     )
     resolution = resolver.resolve(order)
@@ -74,8 +75,9 @@ def main() -> int:
     assert resolution.matched, "Le client d'exemple aurait dû être retrouvé."
     assert resolution.customer_code == "2780008"
     assert resolution.customer_name_master == "Dea Lens Project d.o.o."
-    assert order.products[0].resolved_sku == "1311" and order.products[0].sku_status == "corrige", "SKU faux -> corrigé en 1311"
-    assert order.products[1].resolved_sku == "1136" and order.products[1].sku_status == "ok", "SKU correct -> ok"
+    assert resolution.status == "OK (1 SKU corrigé, 1 à vérifier)", f"statut inattendu: {resolution.status!r}"
+    assert order.products[0].resolved_sku == "1311" and order.products[0].sku_status == "ambigu", "ambigu -> à vérifier"
+    assert order.products[1].resolved_sku == "1136" and order.products[1].sku_status == "corrige", "SKU absent -> corrigé"
     assert validate_resolution(order, resolution) == [], "Commande valide, ne devrait pas être rejetée."
 
     xlsx = build_workbook(order, resolution, file_name="commande_test.pdf")
@@ -100,12 +102,19 @@ def main() -> int:
     assert row["Nom du client"] == "'=Dea Lens Project", "Nom avec '=' doit être neutralisé (apostrophe)."
     assert row["Référence partenaire"] == "PO-2026-00042"
     assert row["Date de livraison souhaitée"] == "2026-07-15"
-    assert row["SKU 1"] == "1311", "SKU 1 doit être le SKU corrigé."
+    assert row["SKU 1"] == "1311", "SKU 1 doit être le SKU résolu (ambigu)."
     assert row["Quantité 1"] == 100
-    assert row["SKU 1 (statut)"] == "corrige"
+    assert row["SKU 1 (statut)"] == "ambigu"
     assert row["SKU 2"] == "1136"
-    assert row["SKU 2 (statut)"] == "ok"
+    assert row["SKU 2 (statut)"] == "corrige"
     assert str(row["Confiance"]) == "0.92"
+
+    # Surlignage : SKU 1 (ambigu) en jaune, SKU 2 (corrigé évident) PAS en jaune.
+    def _fill_rgb(col_label):
+        col = headers.index(col_label) + 1
+        return ws.cell(row=2, column=col).fill.fgColor.rgb
+    assert _fill_rgb("SKU 1") == "FFFFFF00", "SKU ambigu doit être surligné jaune."
+    assert _fill_rgb("SKU 2") != "FFFFFF00", "SKU corrigé évident ne doit PAS être surligné."
 
     # --- Cas de rejet (A-revoir) : client introuvable ---------------------
     order2 = OrderExtraction(

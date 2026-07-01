@@ -139,9 +139,10 @@ Ta tâche, via l'outil "resolve_order" :
 
 2. LIGNES PRODUIT — Pour CHAQUE ligne de la commande, dans le MÊME ordre, en te limitant STRICTEMENT au catalogue du client retrouvé :
    - Si le SKU fourni existe dans le catalogue de ce client → status="ok", resolved_sku = ce SKU.
-   - Si le SKU est faux ou absent MAIS que la désignation de la ligne correspond à un produit du catalogue de ce client → status="corrige", resolved_sku = le SKU correct du catalogue.
+   - Si le SKU est faux ou absent MAIS que la désignation correspond SANS AMBIGUÏTÉ à un seul produit du catalogue → status="corrige", resolved_sku = le SKU correct.
+   - Si PLUSIEURS produits du catalogue de ce client ont des désignations proches et que tu ne peux pas déterminer avec certitude lequel correspond (ex. des noms qui ne diffèrent que par la région, le conditionnement ou une variante) → choisis le plus probable, status="ambigu", resolved_sku = ton meilleur choix (il sera vérifié par un humain).
    - Si ni le SKU ni la désignation ne correspondent à aucun produit du catalogue de ce client → status="inconnu", resolved_sku=null.
-   Ne prends JAMAIS un SKU appartenant au catalogue d'un autre client. Si le client est introuvable, marque toutes les lignes "inconnu".
+   N'utilise "ambigu" QUE en cas de réel doute entre plusieurs produits qui se ressemblent ; si la correspondance est évidente, utilise "corrige". Ne prends JAMAIS un SKU appartenant au catalogue d'un autre client. Si le client est introuvable, marque toutes les lignes "inconnu".
 
 Renvoie exactement une entrée dans "lines" par ligne produit de la commande, dans l'ordre."""
 
@@ -163,8 +164,12 @@ _RESOLVED_LINE_SCHEMA = {
         },
         "status": {
             "type": "string",
-            "enum": ["ok", "corrige", "inconnu"],
-            "description": "ok = SKU du client correct ; corrige = SKU remplacé via la désignation ; inconnu = hors catalogue.",
+            "enum": ["ok", "corrige", "ambigu", "inconnu"],
+            "description": (
+                "ok = SKU du client déjà correct ; corrige = SKU faux/absent remplacé "
+                "sans ambiguïté ; ambigu = plusieurs produits se ressemblent, choix "
+                "incertain (à vérifier) ; inconnu = hors catalogue."
+            ),
         },
     },
     "required": ["designation", "input_sku", "resolved_sku", "status"],

@@ -4,9 +4,10 @@ Une ligne par commande : les champs d'en-tête une fois (champs extraits + code
 Customer « Clé 1 »), puis les produits étalés en colonnes
 (SKU i / Quantité i / SKU i (statut)), puis des colonnes de diagnostic.
 
-Le SKU écrit est le SKU RÉSOLU (correct, issu du catalogue du client). Les SKU
-corrigés sont surlignés jaune pour revue rapide. Claude n'écrit jamais ce
-fichier : le code impose mécaniquement les colonnes.
+Le SKU écrit est le SKU RÉSOLU (correct, issu du catalogue du client). Seuls les
+SKU AMBIGUS (statut "ambigu" — l'IA a hésité entre plusieurs produits proches)
+sont surlignés jaune, pour revue rapide ; les corrections évidentes ne le sont
+pas. Claude n'écrit jamais ce fichier : le code impose mécaniquement les colonnes.
 """
 
 from __future__ import annotations
@@ -22,7 +23,7 @@ from .models import OrderExtraction, Resolution
 SHEET_NAME = "CCI"
 _HEADER_FILL = "FF15578F"  # bleu TRB
 _HEADER_FONT = "FFFFFFFF"
-_HIGHLIGHT_FILL = "FFFFFF00"  # jaune : à vérifier (SKU corrigé / Clé 1 vide)
+_HIGHLIGHT_FILL = "FFFFFF00"  # jaune : à vérifier (SKU ambigu / Clé 1 vide)
 
 # Détecte une chaîne susceptible d'être interprétée comme formule par Excel.
 _FORMULA_PREFIX = re.compile(r"^[=+\-@\t\r]")
@@ -112,7 +113,7 @@ def build_consolidated_workbook(rows: list[dict]) -> bytes:
     """Construit l'Excel CCI consolidé : 1 feuille, 1 ligne par record.
 
     Colonnes : en-têtes fixes, puis `SKU i / Quantité i / SKU i (statut)` pour
-    i = 1..MAX, puis diagnostic. Les SKU corrigés (statut "corrige") et une Clé 1
+    i = 1..MAX, puis diagnostic. Les SKU ambigus (statut "ambigu") et une Clé 1
     manquante sont surlignés jaune.
 
     `rows` vide ⇒ classeur valide avec uniquement les en-têtes.
@@ -158,11 +159,11 @@ def build_consolidated_workbook(rows: list[dict]) -> bytes:
         ws.append([_safe_cell(v) for v in values])
         row_idx = ws.max_row
 
-        # Surlignage : Clé 1 vide (anormal) + chaque SKU corrigé.
+        # Surlignage : Clé 1 vide (anormal) + chaque SKU ambigu (à vérifier).
         if cle1_col and _is_empty(values[cle1_col - 1]):
             ws.cell(row=row_idx, column=cle1_col).fill = yellow
         for i, status in enumerate(statuses):
-            if status == "corrige":
+            if status == "ambigu":
                 sku_col = len(fixed) + i * _PRODUCT_COLS_PER_ITEM + 1
                 ws.cell(row=row_idx, column=sku_col).fill = yellow
 
@@ -203,7 +204,7 @@ def build_workbook(
     if cle1_col and _is_empty(row[cle1_col - 1]):
         ws.cell(row=row_idx, column=cle1_col).fill = yellow
     for i, p in enumerate(order.products):
-        if p.sku_status == "corrige":
+        if p.sku_status == "ambigu":
             sku_col = len(_HEADER_COLUMNS) + i * _PRODUCT_COLS_PER_ITEM + 1
             ws.cell(row=row_idx, column=sku_col).fill = yellow
 
