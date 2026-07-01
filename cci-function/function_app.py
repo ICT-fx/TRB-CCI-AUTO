@@ -6,9 +6,12 @@ Deux routes (auth FUNCTION) :
     1. lire le fichier reçu dans le corps de la requête
     2. détecter le type (PDF / PNG / JPEG / TIFF) ; convertir TIFF -> PNG
     3. extraire les données via Claude (forced tool call)
-    4. enrichir via le master data (client -> TVA, monnaie, incoterm…)
-    5. valider strictement (sinon 422 « A-revoir »)
-    6. renvoyer un record JSON (200) consommé par le Logic App
+    4. valider le format de la commande (sinon 422 « A-revoir »)
+    5. résoudre via le master data (Claude) : code Customer « Clé 1 » +
+       validation/correction du SKU de chaque ligne via le catalogue du client
+    6. valider strictement le résultat : client introuvable ou produit hors
+       catalogue -> 422 « A-revoir »
+    7. renvoyer un record JSON (200) consommé par le Logic App
 
   POST /api/build  — agrège plusieurs records en un seul Excel
     Entrée : {"rows": [<record>, …]} ; sortie : .xlsx consolidé (1 ligne/record).
@@ -26,7 +29,7 @@ import logging
 
 import azure.functions as func
 
-from app import enrichment
+from app import resolver
 from app.anthropic_client import (
     ApiKeyMissingError,
     ClaudeError,
@@ -35,7 +38,7 @@ from app.anthropic_client import (
     extract_order,
 )
 from app.excel_writer import build_consolidated_workbook
-from app.models import build_record, validate_order
+from app.models import build_record, validate_order, validate_resolution
 
 logger = logging.getLogger("cci")
 
@@ -151,8 +154,8 @@ def extract(req: func.HttpRequest) -> func.HttpResponse:
         order.customer_name, len(order.products), order.confidence, order.is_readable,
     )
 
-    # Validation stricte (règle « A-revoir »). Un client hors master data n'est
-    # PAS un motif de rejet : seuls les champs issus de la commande gatent ici.
+    # Validation de FORMAT (avant résolution). Le SKU n'est pas gaté ici : il
+    # peut être faux/absent et sera corrigé via le catalogue à la résolution.
     reasons = validate_order(order)
     if reasons:
         raison = " ; ".join(reasons)
@@ -165,19 +168,37 @@ def extract(req: func.HttpRequest) -> func.HttpResponse:
             note_qualite=order.quality_note,
         )
 
-    # Enrichissement master data (jointure sur le client). Client introuvable ->
-    # champs None + statut « client introuvable », sans rejet (surlignage à /build).
+    # Résolution master data (Claude) : retrouve le code Customer (Clé 1) et
+    # valide/corrige le SKU de chaque ligne via le catalogue du client.
     try:
-        master = enrichment.enrich(order)
+        resolution = resolver.resolve(order)
+    except ApiKeyMissingError as exc:
+        return _json_error(str(exc), 500, file_name=file_name)
+    except ClaudeError as exc:
+        return _json_error(str(exc), 502, file_name=file_name)
     except Exception:
-        logger.exception("Erreur pendant l'enrichissement master data.")
-        return _json_error("Erreur interne pendant l'enrichissement.", 500, file_name=file_name)
+        logger.exception("Erreur pendant la résolution master data.")
+        return _json_error("Erreur interne pendant la résolution.", 500, file_name=file_name)
+
+    # Validation stricte APRÈS résolution : client introuvable OU produit hors
+    # catalogue du client -> A-revoir (422), routé vers revue manuelle.
+    reasons = validate_resolution(order, resolution)
+    if reasons:
+        raison = " ; ".join(reasons)
+        return _json_error(
+            "Commande à router vers revue manuelle (A-revoir).",
+            422,
+            file_name=file_name,
+            raison=raison,
+            confiance=round(order.confidence, 2),
+            note_qualite=order.quality_note,
+        )
 
     # Construire le record JSON (contrat consommé par le Logic App et /api/build).
-    record = build_record(order, master, file_name)
+    record = build_record(order, resolution, file_name)
     logger.info(
-        "Réponse 200 (record) : client=%r, master matched=%s",
-        record["customer_name"], record["master"]["matched"],
+        "Réponse 200 (record) : client=%r, Clé 1=%s, statut=%r",
+        record["customer_name"], record["customer_code"], resolution.status,
     )
     return func.HttpResponse(
         json.dumps(record, ensure_ascii=False),

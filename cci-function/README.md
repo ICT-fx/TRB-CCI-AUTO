@@ -196,16 +196,30 @@ sur Power Automate.
 
 ## 7. Modifier le master data
 
-Le fichier de référence est `app/master_data.xlsx`, feuille `partenaires`.
-Colonnes (la 1re est la clé de jointure) :
+La master data (`app/master_data.xlsx`) est **générée** depuis un export des ventes
+historiques (feuille `data` : `N° document | Description courte | Référence
+principale | Date document | Clé 1 | Nom 1 | Quantité`). Elle sert à deux choses :
+retrouver le **code Customer (« Clé 1 »)** d'un client par son nom, et
+**valider/corriger le SKU** de chaque ligne via le **catalogue** du client.
+
+Pour la régénérer après un nouvel export :
+
+```bash
+cd cci-function
+python3 tools/build_master_data.py /chemin/vers/export_ventes.xlsx
+```
+
+Ça écrit `app/master_data.xlsx` avec 2 feuilles dédupliquées :
 
 ```
-nom_client | numero_tva | monnaie | conditions_paiement_jours | assurance | mode_expedition | incoterm | lieu_provenance | destination_edi
+clients   : customer_code | nom_client                 (1 ligne / client)
+catalogue : customer_code | sku | designation          (1 ligne / client-SKU)
 ```
 
-Ajoute/édite des lignes, enregistre, et **re-publie** (`func azure functionapp
-publish "$APP"`). La jointure ignore la casse et les accents, mais le nom doit
-correspondre au client lu sur le document.
+Puis **re-publie** (`func azure functionapp publish "$APP"`). Le rapprochement du
+nom client et la correspondance produit→SKU sont faits par Claude (2e appel), qui
+reçoit clients + catalogues en contexte (mis en cache). Un client introuvable ou
+un produit hors de son catalogue ⇒ document rejeté (422, revue manuelle).
 
 ---
 

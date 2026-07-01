@@ -12,12 +12,6 @@ import os
 ANTHROPIC_MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-6")
 MAX_TOKENS = 8000
 
-# --- Constantes de gabarit de document (CCI ProConcept) ------------------
-# Ces deux valeurs sont des constantes (Source = Master Data dans la spec,
-# mais identiques pour toutes les CCI au format actuel).
-DOCUMENT_TYPE = "Commande Client"
-DOCUMENT_TEMPLATE_DESCRIPTION = "Vente - Commande Client"
-
 # Seuil de confiance en-dessous duquel on considère l'extraction douteuse.
 # (Le rejet dur se fait sur is_readable ; ce seuil sert au champ "statut".)
 LOW_CONFIDENCE_THRESHOLD = 0.5

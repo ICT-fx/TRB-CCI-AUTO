@@ -15,3 +15,7 @@ obj/
 
 # Sorties de test
 *.out.xlsx
+
+# Source brute des ventes (données internes) : la master data dérivée
+# (app/master_data.xlsx) est committée, mais pas l'export brut.
+tools/ventes_source.xlsx

@@ -15,7 +15,12 @@ from anthropic import Anthropic
 
 from . import config
 from .models import OrderExtraction, ProductLine
-from .schema import EXTRACT_ORDER_TOOL, EXTRACTION_SYSTEM_PROMPT
+from .schema import (
+    EXTRACT_ORDER_TOOL,
+    EXTRACTION_SYSTEM_PROMPT,
+    RESOLUTION_SYSTEM_PROMPT,
+    RESOLVE_ORDER_TOOL,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -119,6 +124,53 @@ def extract_order(source: DocumentSource) -> OrderExtraction:
     return _normalize(tool_use.input)
 
 
+def _render_order_for_resolution(order: OrderExtraction) -> str:
+    """Sérialise la commande extraite pour le 2e appel (résolution)."""
+    lines = []
+    for i, p in enumerate(order.products, start=1):
+        des = p.designation or "(désignation absente)"
+        sku = p.sku if p.sku else "(aucun SKU)"
+        lines.append(f'{i}. désignation="{des}", sku="{sku}", quantité={p.quantity}')
+    lignes = "\n".join(lines) if lines else "(aucune ligne produit)"
+    return (
+        f'Nom du client sur la commande : "{order.customer_name or ""}"\n\n'
+        f"Lignes produit (garde le même ordre dans ta réponse) :\n{lignes}"
+    )
+
+
+def resolve_order(order: OrderExtraction, master_context: str) -> dict:
+    """2e appel Claude : relie la commande à la master data.
+
+    `master_context` (clients + catalogues) est envoyé en bloc système mis en
+    CACHE : stable d'un document à l'autre, il n'est facturé plein tarif qu'une
+    fois par lot. Renvoie le dict brut de l'outil resolve_order.
+    """
+    client = _get_client()
+
+    logger.info("Appel Claude résolution (modèle=%s)…", config.ANTHROPIC_MODEL)
+    response = client.messages.create(
+        model=config.ANTHROPIC_MODEL,
+        max_tokens=config.MAX_TOKENS,
+        system=[
+            {"type": "text", "text": RESOLUTION_SYSTEM_PROMPT},
+            # Master data volumineuse et stable -> cache éphémère (réutilisé dans le lot).
+            {"type": "text", "text": master_context, "cache_control": {"type": "ephemeral"}},
+        ],
+        tools=[RESOLVE_ORDER_TOOL],
+        tool_choice={"type": "tool", "name": "resolve_order"},
+        messages=[{"role": "user", "content": _render_order_for_resolution(order)}],
+    )
+
+    tool_use = next(
+        (block for block in response.content if block.type == "tool_use"), None
+    )
+    if tool_use is None:
+        if response.stop_reason == "refusal":
+            raise ClaudeError("La résolution a été refusée par le système de sécurité.")
+        raise ClaudeError("Claude n'a pas renvoyé de résolution structurée.")
+    return tool_use.input or {}
+
+
 def _coerce_number(value) -> float | None:
     """Renvoie un float si possible (0 conservé), sinon None."""
     if isinstance(value, bool):  # bool est sous-classe d'int : à exclure
@@ -139,6 +191,7 @@ def _normalize(raw: dict) -> OrderExtraction:
             p = p or {}
             products.append(
                 ProductLine(
+                    designation=p.get("designation"),
                     sku=p.get("sku"),
                     quantity=_coerce_number(p.get("quantity")),
                 )
