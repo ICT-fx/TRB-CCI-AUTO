@@ -2,6 +2,13 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+> **📖 Start here for the big picture:** [`docs/OVERVIEW.md`](docs/OVERVIEW.md) — what the
+> tool does end-to-end, and where every data file / script / output lives. The repo has
+> **two subsystems**: (A) this Next.js web app (`src/`, documented below) and (B) the
+> **CCI Azure Function** (`cci-function/`) — the serverless pipeline that is **deployed in
+> production** and where recent work happens. When the task is about the CCI pipeline,
+> master data, "Clé 1", SKU correction, or Azure deployment, read `docs/OVERVIEW.md` first.
+
 ## Project
 
 AI-powered order-document extraction for **TRB Chemedica** (Geneva). Office users
