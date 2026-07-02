@@ -37,7 +37,7 @@ from app.anthropic_client import (
     PdfSource,
     extract_order,
 )
-from app.excel_writer import build_consolidated_workbook
+from app.excel_writer import build_consolidated_workbook, build_error_report
 from app.models import (
     build_record,
     suggested_filename,
@@ -249,6 +249,43 @@ def build(req: func.HttpRequest) -> func.HttpResponse:
 
     out_name = "CCI-Lot.xlsx"
     logger.info("Réponse 200 : %s (%d octets)", out_name, len(xlsx_bytes))
+    return func.HttpResponse(
+        body=xlsx_bytes,
+        status_code=200,
+        mimetype=_XLSX_MIME,
+        headers={"Content-Disposition": f'attachment; filename="{out_name}"'},
+    )
+
+
+@app.route(route="build_errors", methods=["POST"])
+def build_errors(req: func.HttpRequest) -> func.HttpResponse:
+    """Génère l'Excel de reporting des commandes rejetées (dossier A-revoir).
+
+    Entrée : {"rows": [{"nom_fichier", "date", "raison", "note"}, …]}.
+    Sortie : .xlsx (colonnes Nom du fichier | Date de l'erreur | Observation).
+    `rows` manquant -> 400. `rows` = [] -> classeur valide avec seulement l'en-tête.
+    """
+    try:
+        payload = req.get_json()
+    except ValueError:
+        return _json_error("Corps JSON invalide : objet {\"rows\": [...]} attendu.", 400)
+
+    if not isinstance(payload, dict) or "rows" not in payload:
+        return _json_error("Champ 'rows' manquant dans le corps JSON.", 400)
+
+    rows = payload.get("rows") or []
+    if not isinstance(rows, list):
+        return _json_error("Le champ 'rows' doit être une liste.", 400)
+
+    logger.info("Build reporting A-revoir : %d ligne(s).", len(rows))
+
+    try:
+        xlsx_bytes = build_error_report(rows)
+    except Exception:
+        logger.exception("Erreur pendant la génération de l'Excel A-revoir.")
+        return _json_error("Erreur interne pendant la génération du reporting.", 500)
+
+    out_name = "A-revoir.xlsx"
     return func.HttpResponse(
         body=xlsx_bytes,
         status_code=200,

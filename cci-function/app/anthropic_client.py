@@ -135,7 +135,8 @@ def _render_order_for_resolution(order: OrderExtraction) -> str:
         lines.append(f'{i}. désignation="{des}", sku="{sku}", quantité={p.quantity}')
     lignes = "\n".join(lines) if lines else "(aucune ligne produit)"
     return (
-        f'Nom du client sur la commande : "{order.customer_name or ""}"\n\n'
+        f'Nom du client sur la commande : "{order.customer_name or ""}"\n'
+        f'Adresse de livraison : "{order.delivery_address or "(absente)"}"\n\n'
         f"Lignes produit (garde le même ordre dans ta réponse) :\n{lignes}"
     )
 
@@ -246,6 +247,7 @@ def _normalize(raw: dict) -> OrderExtraction:
         customer_name=raw.get("customer_name"),
         partner_reference=raw.get("partner_reference"),
         requested_delivery_date=_format_delivery_date(raw.get("requested_delivery_date")),
+        delivery_address=raw.get("delivery_address"),
         products=products,
         comments=raw.get("comments"),
         confidence=confidence,

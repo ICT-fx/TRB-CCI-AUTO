@@ -14,13 +14,14 @@ Produit `selftest.out.xlsx` et affiche l'en-tête + la ligne de données.
 from __future__ import annotations
 
 import datetime
+import io
 import sys
 
 from openpyxl import load_workbook
 
 from app import anthropic_client, resolver
 from app.anthropic_client import _format_delivery_date
-from app.excel_writer import build_workbook
+from app.excel_writer import build_error_report, build_workbook
 from app.models import (
     OrderExtraction,
     ProductLine,
@@ -169,6 +170,22 @@ def main() -> int:
     assert order3.products[0].sku_status == "inconnu", "SKU hors catalogue -> 'inconnu'."
     assert validate_resolution(order3, res3), "Un produit hors catalogue doit être rejeté (A-revoir)."
     print(f"Rejet attendu (produit hors catalogue) : {validate_resolution(order3, res3)}")
+
+    # --- Reporting A-revoir : Nom du fichier | Date de l'erreur | Observation ---
+    err_xlsx = build_error_report([
+        {"nom_fichier": "TRB Chemedica - 02-07-2026.pdf", "date": "02/07/2026",
+         "raison": "client introuvable dans la master data : X", "note": "scan flou"},
+        {"nom_fichier": "Client Y - 03-07-2026.png", "date": "03/07/2026",
+         "raison": "produit(s) hors catalogue: Ostenil", "note": ""},
+    ])
+    ews = load_workbook(io.BytesIO(err_xlsx)).active
+    assert [c.value for c in ews[1]] == ["Nom du fichier", "Date de l'erreur", "Observation"]
+    r1 = [c.value for c in ews[2]]
+    assert r1[0] == "TRB Chemedica - 02-07-2026.pdf" and r1[1] == "02/07/2026"
+    assert "client introuvable" in r1[2] and "scan flou" in r1[2], r1[2]
+    r2 = [c.value for c in ews[3]]
+    assert r2[2] == "produit(s) hors catalogue: Ostenil", r2[2]  # pas de note -> pas de tiret
+    print("\nReporting A-revoir : colonnes + observations OK.")
 
     print("\nOK — tous les contrôles passent.")
     return 0

@@ -165,6 +165,41 @@ def build_consolidated_workbook(rows: list[dict]) -> bytes:
     return buffer.getvalue()
 
 
+_ERROR_SHEET = "A-revoir"
+_ERROR_COLUMNS = ["Nom du fichier", "Date de l'erreur", "Observation"]
+
+
+def build_error_report(rows: list[dict]) -> bytes:
+    """Excel de reporting des commandes rejetées (dossier A-revoir).
+
+    1 ligne par commande en erreur. Chaque `row` (dict) :
+      - nom_fichier : le nouveau nom (contenant le nom du client)
+      - date        : date de l'erreur (déjà formatée, ex. 02/07/2026)
+      - raison      : motif du rejet ; note : note qualité (optionnelle)
+    Colonnes : Nom du fichier | Date de l'erreur | Observation.
+    `rows` vide ⇒ classeur valide avec uniquement les en-têtes.
+    """
+    rows = rows or []
+    wb = Workbook()
+    ws = wb.active
+    ws.title = _ERROR_SHEET
+    ws.append(_ERROR_COLUMNS)
+    for r in rows:
+        r = r if isinstance(r, dict) else {}
+        raison = (r.get("raison") or "").strip()
+        note = (r.get("note") or "").strip()
+        observation = (raison + (" — " + note if note else "")).strip(" —")
+        ws.append([
+            _safe_cell(r.get("nom_fichier")),
+            _safe_cell(r.get("date")),
+            _safe_cell(observation),
+        ])
+    _finish_sheet(ws, _ERROR_COLUMNS)
+    buffer = io.BytesIO()
+    wb.save(buffer)
+    return buffer.getvalue()
+
+
 def build_workbook(
     order: OrderExtraction, resolution: Resolution, file_name: str
 ) -> bytes:

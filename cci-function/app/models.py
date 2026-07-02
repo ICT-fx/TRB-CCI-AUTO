@@ -71,6 +71,9 @@ class OrderExtraction:
     customer_name: Optional[str] = None
     partner_reference: Optional[str] = None
     requested_delivery_date: Optional[str] = None
+    # Adresse de livraison : sert uniquement à la résolution (distinguer des
+    # clients homonymes, ex. TRB Thailand/Vietnam/Myanmar). Pas dans l'Excel.
+    delivery_address: Optional[str] = None
     products: list[ProductLine] = field(default_factory=list)
 
     # Diagnostic (renvoyé par Claude, non destiné à l'ERP)

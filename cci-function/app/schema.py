@@ -12,7 +12,7 @@ EXTRACTION_SYSTEM_PROMPT = """Tu es un assistant expert en traitement de command
 
 Analyse le document de commande client fourni et extrais les informations demandées via l'outil "extract_order".
 
-Tu ne dois extraire du document QUE ces informations : le nom du client, la référence partenaire, la date de livraison souhaitée, et pour chaque ligne produit la désignation (nom du produit), le SKU (4 chiffres) et la quantité.
+Tu ne dois extraire du document QUE ces informations : le nom du client, la référence partenaire, la date de livraison souhaitée, l'adresse de livraison, et pour chaque ligne produit la désignation (nom du produit), le SKU (4 chiffres) et la quantité.
 
 Règles importantes :
 1. Si une valeur a été raturée puis réécrite à la main, utilise TOUJOURS la valeur manuscrite corrigée la plus récente. Exemple : si une quantité "50" est barrée et "75" écrit à la main à côté, extrais 75.
@@ -29,8 +29,9 @@ Règles importantes :
 12. Les documents peuvent mélanger les langues (FR, DE, EN, IT). Gère-les toutes.
 13. Mets "is_readable" à false uniquement si le document est trop dégradé pour une extraction fiable.
 14. Mets "confidence" entre 0 et 1 selon ta confiance globale dans l'extraction.
+15. delivery_address = l'adresse de livraison / le destinataire figurant sur la commande (nom du destinataire, ville et surtout le PAYS). Elle est essentielle pour distinguer certains clients qui portent le même nom sur la commande mais livrent dans des pays différents. Extrais-la fidèlement ; null si vraiment absente.
 
-N'extrais PAS du document : l'adresse / le lieu de livraison, le lieu de l'incoterm, la valeur ou le prix des articles, la monnaie, les conditions de paiement, le numéro de TVA ni l'incoterm. Ces champs ne sont pas requis ou proviennent d'une table de référence interne, jamais du document."""
+N'extrais PAS : le lieu de l'incoterm, la valeur ou le prix des articles, la monnaie, les conditions de paiement, le numéro de TVA ni l'incoterm — ces champs proviennent d'une table de référence interne, jamais du document."""
 
 
 # Schéma d'une ligne produit. Types en union ["...", "null"] (non-strict) pour
@@ -84,6 +85,10 @@ EXTRACT_ORDER_TOOL = {
                 "type": ["string", "null"],
                 "description": "Date de livraison souhaitée : ISO AAAA-MM-JJ si jour connu, sinon AAAA-MM si seuls mois+année.",
             },
+            "delivery_address": {
+                "type": ["string", "null"],
+                "description": "Adresse de livraison / destinataire (nom, ville, PAYS). Sert à distinguer certains clients homonymes. null si absente.",
+            },
             "products": {
                 "type": "array",
                 "description": "Chaque ligne produit (SKU) trouvée dans le document.",
@@ -110,6 +115,7 @@ EXTRACT_ORDER_TOOL = {
             "customer_name",
             "partner_reference",
             "requested_delivery_date",
+            "delivery_address",
             "products",
             "comments",
             "confidence",
@@ -136,6 +142,12 @@ La master data (fournie dans le message) contient, pour chaque client : son CODE
 Ta tâche, via l'outil "resolve_order" :
 
 1. CLIENT — Retrouve le client dont le nom correspond le mieux au nom de la commande. Les noms diffèrent souvent (casse, accents, forme juridique « SL / S.A. / d.o.o. / GmbH », abréviations, fautes). Si un client correspond clairement, renvoie son code dans customer_code et customer_status="ok". Si aucun ne correspond de façon fiable, ou si plusieurs clients sont réellement ambigus, renvoie customer_code=null et customer_status="introuvable" (ou "ambigu"). N'invente JAMAIS un code.
+
+CAS PARTICULIER — TRB Chemedica (Thailand) : trois clients DISTINCTS sont TOUS écrits « TRB Chemedica (Thailand) Ltd » sur les commandes, mais correspondent à des codes différents selon l'ADRESSE DE LIVRAISON (delivery_address) — regarde surtout le PAYS de livraison :
+   - 8900004 = « TRB Chemedica (Thailand) Ltd » → livraison en THAÏLANDE (cas par défaut).
+   - 8900045 = « TRB Chemedica (Thailand) Ltd for Vietnam » → si l'adresse de livraison est au VIETNAM (ex. destinataire « DKSH Vietnam »).
+   - 8900054 = « TRB Chemedica (Thailand) Ltd for Myanmar » → si l'adresse de livraison est au MYANMAR (Birmanie).
+   Quand le nom du client est « TRB Chemedica (Thailand) », NE te fie PAS au seul nom : utilise delivery_address pour choisir le bon code parmi ces trois. Si l'adresse ne permet vraiment pas de trancher, customer_status="ambigu".
 
 2. LIGNES PRODUIT — Pour CHAQUE ligne de la commande, dans le MÊME ordre, en te limitant STRICTEMENT au catalogue du client retrouvé :
    - Si le SKU fourni existe dans le catalogue de ce client → status="ok", resolved_sku = ce SKU.
