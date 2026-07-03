@@ -1,0 +1,1230 @@
+[
+  {
+    "source": "AG.pdf",
+    "out": "AG",
+    "skin": "sap",
+    "lang": "de",
+    "client_name": "Rheintal Pharmazeutika GmbH",
+    "sender": {
+      "name": "Rheintal Pharmazeutika GmbH",
+      "lines": [
+        "Otto-Hahn-Strasse 14",
+        "85622 Feldkirchen",
+        "Germany"
+      ],
+      "contact": "Franziska Wulf",
+      "tel": "+49 89 4520 118"
+    },
+    "recipient": {
+      "name": "TRB Chemedica AG",
+      "lines": [
+        "Otto-Lilienthal-Ring 26",
+        "85622 Feldkirchen",
+        "Germany"
+      ]
+    },
+    "partner_reference": "LB-26-0349",
+    "order_date": "25.02.2026",
+    "requested_delivery_date": "KW 46/2026",
+    "currency": "EUR",
+    "notes": "Payment condition 90 days net. Ex works.",
+    "lines": [
+      {
+        "designation": "OSTENIL MINI 1 - EU-WEST",
+        "sku": "1082",
+        "qty": 12,
+        "unit_price": 88888.0
+      }
+    ],
+    "outcome": "pass",
+    "customer_code": "9000001",
+    "intruder_index": null
+  },
+  {
+    "source": "Austria.pdf",
+    "out": "Austria",
+    "skin": "trb_orderform",
+    "lang": "en",
+    "client_name": "Alpenmed Vertriebs GmbH",
+    "sender": {
+      "name": "Alpenmed Vertriebs GmbH",
+      "lines": [
+        "Industriezentrum NÖ Süd, Strasse 7",
+        "A-2355 Wiener Neudorf",
+        "Austria"
+      ],
+      "contact": "Florian Palmer-Doerner",
+      "tel": "0043 2236 660600 12"
+    },
+    "recipient": {
+      "name": "TRB CHEMEDICA INTERNATIONAL S.A.",
+      "lines": [
+        "Route des Jeunes 33bis",
+        "1227 Carouge GE",
+        "Switzerland"
+      ]
+    },
+    "partner_reference": "AT-26-014",
+    "order_date": "10.06.2026",
+    "requested_delivery_date": "June 2027",
+    "currency": "EUR",
+    "notes": "Prices according to the 2026 price list. Means of transport: Truck.",
+    "lines": [
+      {
+        "designation": "OSTENIL 1 TY - EU-WEST",
+        "sku": "1780",
+        "qty": 21,
+        "unit_price": 88888.0
+      },
+      {
+        "designation": "OSTENIL 100 TY - EU-WEST",
+        "sku": "1781",
+        "qty": 7,
+        "unit_price": 125000.0
+      },
+      {
+        "designation": "OSTENIL PLUS 1 - EU-WEST",
+        "sku": "1013",
+        "qty": 16,
+        "unit_price": 74250.0
+      },
+      {
+        "designation": "OSTENIL MINI 1 - EU-WEST",
+        "sku": "1082",
+        "qty": 30,
+        "unit_price": 199990.0
+      }
+    ],
+    "outcome": "pass",
+    "customer_code": "9000002",
+    "intruder_index": null
+  },
+  {
+    "source": "brazil.pdf",
+    "out": "brazil",
+    "skin": "trb_orderform",
+    "lang": "en",
+    "client_name": "Farma Atlântico Indústria Ltda",
+    "sender": {
+      "name": "Farma Atlântico Indústria Ltda",
+      "lines": [
+        "Rua das Palmeiras, 149",
+        "São Paulo, SP, Brasil",
+        "CEP: 04334-150"
+      ],
+      "contact": "Ricardo Benevides",
+      "tel": "+55 11 5588-2500"
+    },
+    "recipient": {
+      "name": "TRB CHEMEDICA INTERNATIONAL S.A.",
+      "lines": [
+        "Route des Jeunes 33bis",
+        "1227 Carouge GE",
+        "Switzerland"
+      ]
+    },
+    "partner_reference": "MINI-010627",
+    "order_date": "01.06.2026",
+    "requested_delivery_date": "14.06.2027",
+    "currency": "EUR",
+    "notes": "Means of transport: Air freight.",
+    "lines": [
+      {
+        "designation": "OSTENIL MINI 1 - EU-WEST",
+        "sku": "1082",
+        "qty": 24,
+        "unit_price": 42600.0
+      },
+      {
+        "designation": "OSTENIL 1 - EU-WEST",
+        "sku": "0587",
+        "qty": 9,
+        "unit_price": 312000.0
+      }
+    ],
+    "outcome": "pass",
+    "customer_code": "9000003",
+    "intruder_index": null
+  },
+  {
+    "source": "brudylab.pdf",
+    "out": "brudylab",
+    "skin": "invoice",
+    "lang": "en",
+    "client_name": "Laboratorios Brisamar S.L.U.",
+    "sender": {
+      "name": "Laboratorios Brisamar S.L.U.",
+      "lines": [
+        "Riera de Sant Miquel, 3",
+        "08006 Barcelona",
+        "Spain"
+      ],
+      "contact": "Compras",
+      "tel": "+34 93 217 0366"
+    },
+    "recipient": {
+      "name": "TRB CHEMEDICA INTERNATIONAL S.A.",
+      "lines": [
+        "Rue Michel-Servet 12",
+        "1206 Geneva",
+        "Switzerland"
+      ]
+    },
+    "partner_reference": "PO-2026-36",
+    "order_date": "16.06.2026",
+    "requested_delivery_date": "October 2026",
+    "currency": "EUR",
+    "notes": "Delivery in October '26.",
+    "lines": [
+      {
+        "designation": "VISMED 20 - N",
+        "sku": "0687",
+        "qty": 24,
+        "unit_price": 96500.0
+      }
+    ],
+    "outcome": "pass",
+    "customer_code": "9000004",
+    "intruder_index": null
+  },
+  {
+    "source": "cigalah drug store.pdf",
+    "out": "cigalah",
+    "skin": "grid",
+    "lang": "en",
+    "client_name": "Emirates Crescent Drug Store L.L.C.",
+    "sender": {
+      "name": "Emirates Crescent Drug Store L.L.C.",
+      "lines": [
+        "Nad Al Hamar, 9th Street",
+        "Dubai",
+        "United Arab Emirates"
+      ],
+      "contact": "Parin K Rathod",
+      "tel": "+971 50 50 55389"
+    },
+    "recipient": {
+      "name": "TRB CHEMEDICA INTERNATIONAL S.A.",
+      "lines": [
+        "Route des Jeunes 33bis",
+        "1227 Carouge GE",
+        "Switzerland"
+      ]
+    },
+    "partner_reference": "POSC-TRB-022026-1",
+    "order_date": "03.04.2026",
+    "requested_delivery_date": "May 2026",
+    "currency": "USD",
+    "notes": "Please indicate our PO ref in all documents. Incoterm: CIP.",
+    "lines": [
+      {
+        "designation": "VISMED GEL 20 - MENA",
+        "sku": "1328",
+        "qty": 18,
+        "unit_price": 158000.0
+      },
+      {
+        "designation": "VISMED 20 - MENA",
+        "sku": "1325",
+        "qty": 26,
+        "unit_price": 249000.0
+      }
+    ],
+    "outcome": "pass",
+    "customer_code": "9000005",
+    "intruder_index": null
+  },
+  {
+    "source": "Combiphar.pdf",
+    "out": "Combiphar",
+    "skin": "sap",
+    "lang": "en",
+    "client_name": "PT Nusantara Farma Sentosa",
+    "sender": {
+      "name": "PT NUSANTARA FARMA SENTOSA",
+      "lines": [
+        "Jl. Jend. Sudirman Kav. 52-53",
+        "Jakarta Selatan 12190",
+        "Indonesia"
+      ],
+      "contact": "Procurement",
+      "tel": "(62-21) 293 33031"
+    },
+    "recipient": {
+      "name": "TRB CHEMEDICA INTERNATIONAL S.A.",
+      "lines": [
+        "Rue Michel-Servet 12",
+        "1206 Geneva",
+        "Switzerland"
+      ]
+    },
+    "partner_reference": "4500046167",
+    "order_date": "13.04.2026",
+    "requested_delivery_date": "10.02.2027",
+    "currency": "EUR",
+    "notes": "Incoterm: CIP Jakarta. Payment: 150 days after AWB date.",
+    "lines": [
+      {
+        "designation": "ARTRODAR 30 consig. ARG",
+        "sku": "1344",
+        "qty": 9,
+        "unit_price": 61750.0
+      }
+    ],
+    "outcome": "pass",
+    "customer_code": "9000006",
+    "intruder_index": null
+  },
+  {
+    "source": "Corporacion Am.pdf",
+    "out": "Corporacion_Am",
+    "skin": "invoice",
+    "lang": "es",
+    "client_name": "Distribuidora Centroamericana de Farmacia, S.A.",
+    "sender": {
+      "name": "Distribuidora Centroamericana de Farmacia, S.A.",
+      "lines": [
+        "5a. Avenida 4-12, Zona 1",
+        "Guatemala, C.A."
+      ],
+      "contact": "Compras",
+      "tel": "2238-3581"
+    },
+    "recipient": {
+      "name": "TRB CHEMEDICA INTERNATIONAL S.A.",
+      "lines": [
+        "Rue Michel-Servet 12",
+        "1206 Geneva",
+        "Switzerland"
+      ]
+    },
+    "partner_reference": "260540",
+    "order_date": "07.05.2026",
+    "requested_delivery_date": "July 2026",
+    "currency": "USD",
+    "notes": "Vía aérea. Términos: 90 días. No enviar mercadería con vencimiento menor a 18 meses.",
+    "lines": [
+      {
+        "designation": "ARTRODAR 30 consig. ARG",
+        "sku": "1344",
+        "qty": 22,
+        "unit_price": 404040.0
+      }
+    ],
+    "outcome": "pass",
+    "customer_code": "9000007",
+    "intruder_index": null
+  },
+  {
+    "source": "Doc G.pdf",
+    "out": "Doc_G",
+    "skin": "sap",
+    "lang": "it",
+    "client_name": "Farmaceutici Aurelia S.r.l.",
+    "sender": {
+      "name": "FARMACEUTICI AURELIA S.r.l.",
+      "lines": [
+        "Via Cassia 1201",
+        "00189 Roma",
+        "Italy"
+      ],
+      "contact": "Ufficio Acquisti",
+      "tel": "+39 06 3312 8800"
+    },
+    "recipient": {
+      "name": "TRB CHEMEDICA INTERNATIONAL S.A.",
+      "lines": [
+        "Rue Michel-Servet 12",
+        "1206 Geneva",
+        "Switzerland"
+      ]
+    },
+    "partner_reference": "OA-2026-1188",
+    "order_date": "12.05.2026",
+    "requested_delivery_date": "September 2026",
+    "currency": "EUR",
+    "notes": "Ordine soggetto al Codice Etico e al Modello 231/2001.",
+    "lines": [
+      {
+        "designation": "IDROFLOG 15",
+        "sku": "1621",
+        "qty": 14,
+        "unit_price": 137900.0
+      },
+      {
+        "designation": "RELYS Multidose 10 ml (IT)",
+        "sku": "1749",
+        "qty": 6,
+        "unit_price": 275500.0
+      }
+    ],
+    "outcome": "fail_client",
+    "customer_code": "9000008",
+    "intruder_index": null
+  },
+  {
+    "source": "Hong kong.pdf",
+    "out": "Hong_kong",
+    "skin": "grid",
+    "lang": "en",
+    "client_name": "Jade Harbour Medical (Hong Kong) Ltd.",
+    "sender": {
+      "name": "Jade Harbour Medical (Hong Kong) Ltd.",
+      "lines": [
+        "Flat C2, 16/F, Ever Gain Centre",
+        "28 On Muk Street, Shatin",
+        "Hong Kong"
+      ],
+      "contact": "Purchasing",
+      "tel": "+852 2601 1234"
+    },
+    "recipient": {
+      "name": "TRB CHEMEDICA INTERNATIONAL S.A.",
+      "lines": [
+        "Route des Jeunes 33bis",
+        "1227 Carouge GE",
+        "Switzerland"
+      ]
+    },
+    "partner_reference": "OF-26-0148",
+    "order_date": "29.04.2026",
+    "requested_delivery_date": "01.12.2026",
+    "currency": "EUR",
+    "notes": "Shipment method: EXW at factory. Payment terms: 60 days.",
+    "lines": [
+      {
+        "designation": "TENDOACTIVE - HK",
+        "sku": "1719",
+        "qty": 20,
+        "unit_price": 89990.0
+      }
+    ],
+    "outcome": "pass",
+    "customer_code": "9000009",
+    "intruder_index": null
+  },
+  {
+    "source": "Kukje.pdf",
+    "out": "Kukje",
+    "skin": "letter",
+    "lang": "en",
+    "client_name": "Hankuk Medi Pharm Co., Ltd.",
+    "sender": {
+      "name": "HANKUK MEDI PHARM CO., LTD.",
+      "lines": [
+        "96-8, Yatab-ro, Bundang-gu",
+        "Seongnam-City, Gyeonggi-do",
+        "Korea"
+      ],
+      "contact": "H. J. Lee / General Manager",
+      "tel": "+82 31 781 9081"
+    },
+    "recipient": {
+      "name": "TRB CHEMEDICA INTERNATIONAL S.A.",
+      "lines": [
+        "Rue Michel-Servet 12",
+        "1206 Geneva",
+        "Switzerland"
+      ]
+    },
+    "partner_reference": "KJ261016R-1",
+    "order_date": "26.03.2026",
+    "requested_delivery_date": "May 2026",
+    "currency": "EUR",
+    "notes": "Destination: Incheon Airport, Korea. Packing: Export Standard Packing.",
+    "lines": [
+      {
+        "designation": "VISMED MULTI 10 - KOREA",
+        "sku": "1313",
+        "qty": 28,
+        "unit_price": 512000.0
+      }
+    ],
+    "outcome": "pass",
+    "customer_code": "9000010",
+    "intruder_index": null
+  },
+  {
+    "source": "Mephropharm.pdf",
+    "out": "Mephropharm",
+    "skin": "sap",
+    "lang": "en",
+    "client_name": "PT Bumi Sehat Farmasi",
+    "sender": {
+      "name": "PT BUMI SEHAT FARMASI",
+      "lines": [
+        "Jl. Soekarno Hatta 789",
+        "Bandung 40294",
+        "Indonesia"
+      ],
+      "contact": "Purchasing",
+      "tel": "(022) 7805588"
+    },
+    "recipient": {
+      "name": "TRB CHEMEDICA INTERNATIONAL S.A.",
+      "lines": [
+        "Rue Michel-Servet 12",
+        "1206 Geneva",
+        "Switzerland"
+      ]
+    },
+    "partner_reference": "412505560",
+    "order_date": "20.11.2025",
+    "requested_delivery_date": "December 2026",
+    "currency": "USD",
+    "notes": "Cantumkan No PO pada setiap surat pengantar. Confirm delivery date.",
+    "lines": [
+      {
+        "designation": "OSTENIL 1 TY - EU-WEST",
+        "sku": "1780",
+        "qty": 19,
+        "unit_price": 88888.0
+      },
+      {
+        "designation": "OSTENIL PLUS 1 TY - EU-WEST",
+        "sku": "1784",
+        "qty": 11,
+        "unit_price": 125000.0
+      }
+    ],
+    "outcome": "pass",
+    "customer_code": "9000011",
+    "intruder_index": null
+  },
+  {
+    "source": "Optimed.pdf",
+    "out": "Optimed",
+    "skin": "trb_orderform",
+    "lang": "en",
+    "client_name": "Medikom Adria d.o.o.",
+    "sender": {
+      "name": "MEDIKOM ADRIA D.O.O.",
+      "lines": [
+        "Litostrojska cesta 44 c",
+        "1000 Ljubljana",
+        "Slovenia"
+      ],
+      "contact": "Naročila",
+      "tel": "+386 1 518 19 77"
+    },
+    "recipient": {
+      "name": "TRB CHEMEDICA INTERNATIONAL S.A.",
+      "lines": [
+        "Rue Michel-Servet 12",
+        "1206 Geneva",
+        "Switzerland"
+      ]
+    },
+    "partner_reference": "PO-2026-09",
+    "order_date": "16.04.2026",
+    "requested_delivery_date": "16.09.2026",
+    "currency": "EUR",
+    "notes": "EX WORKS. Week no. 38.",
+    "lines": [
+      {
+        "designation": "VISMED GEL 20 - N",
+        "sku": "0899",
+        "qty": 12,
+        "unit_price": 74250.0
+      },
+      {
+        "designation": "VISMED LIGHT 15 - N",
+        "sku": "0903",
+        "qty": 8,
+        "unit_price": 199990.0
+      },
+      {
+        "designation": "VISMED 20 - N",
+        "sku": "0687",
+        "qty": 15,
+        "unit_price": 42600.0
+      },
+      {
+        "designation": "VISMED MULTI 10 - N (INT) std",
+        "sku": "1083",
+        "qty": 22,
+        "unit_price": 312000.0
+      },
+      {
+        "designation": "VISIOL 1 - N, ss bkp/can",
+        "sku": "1307",
+        "qty": 6,
+        "unit_price": 96500.0
+      },
+      {
+        "designation": "OSTENIL PLUS 1 TY - EU-WEST",
+        "sku": "1784",
+        "qty": 10,
+        "unit_price": 158000.0
+      }
+    ],
+    "outcome": "fail_product",
+    "intruder_index": 5,
+    "customer_code": "9000012"
+  },
+  {
+    "source": "PL.pdf",
+    "out": "PL",
+    "skin": "trb_orderform",
+    "lang": "en",
+    "client_name": "Vistula Pharma Sp. z o.o.",
+    "sender": {
+      "name": "Vistula Pharma Sp. z o.o.",
+      "lines": [
+        "ul. Belwederska 9A Lok. 5",
+        "00-761 Warszawa",
+        "Poland"
+      ],
+      "contact": "Sylwester Szarafin",
+      "tel": "+48 203 83 13"
+    },
+    "recipient": {
+      "name": "TRB CHEMEDICA INTERNATIONAL S.A.",
+      "lines": [
+        "Route des Jeunes 33bis",
+        "1227 Carouge GE",
+        "Switzerland"
+      ]
+    },
+    "partner_reference": "02/2026",
+    "order_date": "27.01.2026",
+    "requested_delivery_date": "January 2027",
+    "currency": "EUR",
+    "notes": "Means of transport: Truck. Split will be done — wholesalers.",
+    "lines": [
+      {
+        "designation": "OSTENIL MINI 1 - EU-WEST",
+        "sku": "1082",
+        "qty": 18,
+        "unit_price": 249000.0
+      }
+    ],
+    "outcome": "pass",
+    "customer_code": "9000013",
+    "intruder_index": null
+  },
+  {
+    "source": "river pharma.pdf",
+    "out": "river_pharma",
+    "skin": "invoice",
+    "lang": "es",
+    "client_name": "Andes River Pharma S.A.C.",
+    "sender": {
+      "name": "ANDES RIVER PHARMA S.A.C.",
+      "lines": [
+        "Av. General Trinidad Morán 1178, Lince",
+        "Lima",
+        "Perú"
+      ],
+      "contact": "Compras",
+      "tel": "+51 1 470 0000"
+    },
+    "recipient": {
+      "name": "TRB CHEMEDICA INTERNATIONAL S.A.",
+      "lines": [
+        "Rue Michel-Servet 12",
+        "1206 Geneva",
+        "Switzerland"
+      ]
+    },
+    "partner_reference": "0020-RP-2026",
+    "order_date": "07.05.2026",
+    "requested_delivery_date": "July 2026",
+    "currency": "USD",
+    "notes": "Moneda: dólares. Condición de pago: contado. Entregar en: Perú.",
+    "lines": [
+      {
+        "designation": "OSTENIL TENDON 1 - EU-WEST",
+        "sku": "1203",
+        "qty": 27,
+        "unit_price": 61750.0
+      }
+    ],
+    "outcome": "fail_client",
+    "customer_code": "9000014",
+    "intruder_index": null
+  },
+  {
+    "source": "Serpin.pdf",
+    "out": "Serpin",
+    "skin": "trb_orderform",
+    "lang": "en",
+    "client_name": "Serapis Onay Trading Ltd.",
+    "sender": {
+      "name": "Serapis Onay Trading Ltd.",
+      "lines": [
+        "84 Sht. Mustafa Ruso Caddesi",
+        "K. Kaymakli, Lefkosa",
+        "Mersin-10, Turkey"
+      ],
+      "contact": "Naciye Demirciler",
+      "tel": "90 392 227 0253"
+    },
+    "recipient": {
+      "name": "TRB CHEMEDICA INTERNATIONAL S.A.",
+      "lines": [
+        "Rue Michel-Servet 12",
+        "1206 Geneva",
+        "Switzerland"
+      ]
+    },
+    "partner_reference": "NO-2026-2",
+    "order_date": "13.06.2026",
+    "requested_delivery_date": "May 2027",
+    "currency": "EUR",
+    "notes": "Airport of destination is ERCAN. Means of transport: AIR.",
+    "lines": [
+      {
+        "designation": "VISMED 20 - N",
+        "sku": "0687",
+        "qty": 25,
+        "unit_price": 404040.0
+      },
+      {
+        "designation": "VISMED GEL 20 - N",
+        "sku": "0899",
+        "qty": 12,
+        "unit_price": 137900.0
+      },
+      {
+        "designation": "VISMED LIGHT 15 - N",
+        "sku": "0903",
+        "qty": 8,
+        "unit_price": 275500.0
+      },
+      {
+        "designation": "VISMED MULTI 10 - N (INT) std",
+        "sku": "1083",
+        "qty": 20,
+        "unit_price": 89990.0
+      }
+    ],
+    "outcome": "fail_client",
+    "customer_code": "9000015",
+    "intruder_index": null
+  },
+  {
+    "source": "star int.pdf",
+    "out": "star_int",
+    "skin": "grid",
+    "lang": "en",
+    "client_name": "Nile Star Medical Co.",
+    "sender": {
+      "name": "Nile Star Medical Co.",
+      "lines": [
+        "3A, Maadi Towers, Cornich el Nile",
+        "Maadi, Cairo",
+        "Egypt"
+      ],
+      "contact": "Dr. Mamdouh Deif",
+      "tel": "(002) 25247220"
+    },
+    "recipient": {
+      "name": "TRB CHEMEDICA INTERNATIONAL S.A.",
+      "lines": [
+        "Rue Michel-Servet 12",
+        "1206 Geneva",
+        "Switzerland"
+      ]
+    },
+    "partner_reference": "2026/00011",
+    "order_date": "16.02.2026",
+    "requested_delivery_date": "December 2026",
+    "currency": "EUR",
+    "notes": "Payment: 90 days from invoice. Shipping terms: CIF. Cairo International Airport.",
+    "lines": [
+      {
+        "designation": "OSTENIL 1 - EU-WEST",
+        "sku": "0587",
+        "qty": 15,
+        "unit_price": 512000.0
+      },
+      {
+        "designation": "OSTENIL PLUS 1 - EU-WEST",
+        "sku": "1013",
+        "qty": 23,
+        "unit_price": 88888.0
+      },
+      {
+        "designation": "OSTENIL MINI 1 - EU-WEST",
+        "sku": "1082",
+        "qty": 4,
+        "unit_price": 125000.0
+      },
+      {
+        "designation": "VISCOSEAL 1 SER. - N",
+        "sku": "1202",
+        "qty": 9,
+        "unit_price": 74250.0
+      }
+    ],
+    "outcome": "pass",
+    "customer_code": "9000016",
+    "intruder_index": null
+  },
+  {
+    "source": "synthemedic.pdf",
+    "out": "synthemedic",
+    "skin": "dotmatrix",
+    "lang": "fr",
+    "client_name": "Atlas Médic S.A.",
+    "sender": {
+      "name": "ATLAS MÉDIC S.A.",
+      "lines": [
+        "20-22 Rue Zoubeir Bnou El Aouam",
+        "Roches Noires, 20300 Casablanca",
+        "Maroc"
+      ],
+      "contact": "Achats",
+      "tel": "05 22 40 47 90"
+    },
+    "recipient": {
+      "name": "TRB CHEMEDICA INTERNATIONAL S.A.",
+      "lines": [
+        "Rue Michel-Servet 12",
+        "1206 Geneva",
+        "Switzerland"
+      ]
+    },
+    "partner_reference": "20260298",
+    "order_date": "27.10.2025",
+    "requested_delivery_date": "01.09.2026",
+    "currency": "EUR",
+    "notes": "CIF Coût, Assurance et Fret — Aéroport Mohamed V. 90 jours net.",
+    "lines": [
+      {
+        "designation": "VISMED MULTI 10 - N (INT) std",
+        "sku": "1083",
+        "qty": 30,
+        "unit_price": 199990.0
+      }
+    ],
+    "outcome": "pass",
+    "customer_code": "9000017",
+    "intruder_index": null
+  },
+  {
+    "source": "TH.pdf",
+    "out": "TH",
+    "skin": "trb_po",
+    "lang": "en",
+    "client_name": "Siam Vision Distribution Ltd.",
+    "sender": {
+      "name": "SIAM VISION DISTRIBUTION LTD.",
+      "lines": [
+        "No. 88 The PARQ Building, 9th Floor",
+        "Khlong Toei, Bangkok 10110",
+        "Thailand"
+      ],
+      "contact": "Ms. Nipaporn Jitsook",
+      "tel": "66 2 2642010-4"
+    },
+    "recipient": {
+      "name": "TRB CHEMEDICA INTERNATIONAL S.A.",
+      "lines": [
+        "Rue Michel-Servet 12",
+        "1206 Geneva",
+        "Switzerland"
+      ]
+    },
+    "partner_reference": "TRBTH59/2026",
+    "order_date": "27.04.2026",
+    "requested_delivery_date": "November 2026",
+    "currency": "EUR",
+    "notes": "Incoterm: FCA. Term of payment: 90 days. By Airfreight.",
+    "lines": [
+      {
+        "designation": "VISLUBE MULTI 10 - THA",
+        "sku": "1604",
+        "qty": 26,
+        "unit_price": 42600.0
+      }
+    ],
+    "outcome": "pass",
+    "customer_code": "9000018",
+    "intruder_index": null
+  },
+  {
+    "source": "UK.pdf",
+    "out": "UK",
+    "skin": "grid",
+    "lang": "en",
+    "client_name": "Albion Pharma Distribution Ltd",
+    "sender": {
+      "name": "Albion Pharma Distribution Ltd",
+      "lines": [
+        "9 Evolution, Lymedale Business Park",
+        "Newcastle-under-Lyme, ST5 9QF",
+        "United Kingdom"
+      ],
+      "contact": "Mike Hibbs",
+      "tel": "44 1782 563207"
+    },
+    "recipient": {
+      "name": "TRB CHEMEDICA INTERNATIONAL S.A.",
+      "lines": [
+        "Route des Jeunes 33bis",
+        "1227 Carouge GE",
+        "Switzerland"
+      ]
+    },
+    "partner_reference": "PO-4676",
+    "order_date": "11.06.2026",
+    "requested_delivery_date": "07.06.2027",
+    "currency": "EUR",
+    "notes": "Prices in € Euros. No VAT.",
+    "lines": [
+      {
+        "designation": "VISMED 20 - UK",
+        "sku": "1297",
+        "qty": 22,
+        "unit_price": 312000.0
+      },
+      {
+        "designation": "ARTRODAR 30 consig. ARG",
+        "sku": "1344",
+        "qty": 7,
+        "unit_price": 96500.0
+      }
+    ],
+    "outcome": "fail_product",
+    "intruder_index": 1,
+    "customer_code": "9000019"
+  },
+  {
+    "source": "VT.pdf",
+    "out": "VT",
+    "skin": "trb_po",
+    "lang": "en",
+    "client_name": "Mekong Health Distribution Co., Ltd.",
+    "sender": {
+      "name": "MEKONG HEALTH DISTRIBUTION CO., LTD.",
+      "lines": [
+        "23 Doc Lap Avenue, VSIP",
+        "Binh Hoa Ward, Ho Chi Minh City",
+        "Vietnam"
+      ],
+      "contact": "Ms. Nhi Tran",
+      "tel": "+84 838125737"
+    },
+    "recipient": {
+      "name": "TRB CHEMEDICA INTERNATIONAL S.A.",
+      "lines": [
+        "Rue Michel-Servet 12",
+        "1206 Geneva",
+        "Switzerland"
+      ]
+    },
+    "partner_reference": "TRBVN2026/26",
+    "order_date": "27.05.2026",
+    "requested_delivery_date": "1st week of February 2027",
+    "currency": "USD",
+    "notes": "Under Decree 98, No CE Mark. 80% shelf-life upon arrival. By Airfreight.",
+    "lines": [
+      {
+        "designation": "VISIOL 1 - VN",
+        "sku": "1736",
+        "qty": 4,
+        "unit_price": 158000.0
+      },
+      {
+        "designation": "OSTENIL TENDON 1 TY - VN D98",
+        "sku": "1874",
+        "qty": 10,
+        "unit_price": 249000.0
+      },
+      {
+        "designation": "OSTENIL PLUS 1 TY - VN D98",
+        "sku": "1580",
+        "qty": 14,
+        "unit_price": 61750.0
+      },
+      {
+        "designation": "OSTENIL 1 - VN C30",
+        "sku": "1570",
+        "qty": 12,
+        "unit_price": 404040.0
+      }
+    ],
+    "outcome": "pass",
+    "customer_code": "9000020",
+    "intruder_index": null
+  },
+  {
+    "source": "Al tafaol.pdf",
+    "out": "Al_tafaol",
+    "skin": "modern",
+    "lang": "en",
+    "client_name": "Al Wafra Trading Company W.L.L.",
+    "sender": {
+      "name": "AL WAFRA TRADING COMPANY W.L.L.",
+      "lines": [
+        "Old Airport St., Bldg No. 10",
+        "Zone No. 45, Doha",
+        "Qatar"
+      ],
+      "contact": "Division Manager",
+      "tel": "+974 4465 2773"
+    },
+    "recipient": {
+      "name": "TRB Middle East FZE",
+      "lines": [
+        "The Offices 4 – One Central",
+        "Dubai World Trade Center",
+        "United Arab Emirates"
+      ]
+    },
+    "partner_reference": "FC-Q2-2026",
+    "order_date": "04.11.2025",
+    "requested_delivery_date": "Q2-2026",
+    "currency": "USD",
+    "notes": "Forecasted order for Q2-2026.",
+    "lines": [
+      {
+        "designation": "OSTENIL PLUS 1 - EU-WEST",
+        "sku": "1013",
+        "qty": 16,
+        "unit_price": 137900.0
+      },
+      {
+        "designation": "OSTENIL TENDON 1 - EU-WEST",
+        "sku": "1203",
+        "qty": 16,
+        "unit_price": 275500.0
+      },
+      {
+        "designation": "VISMED 20 - MENA",
+        "sku": "1325",
+        "qty": 29,
+        "unit_price": 89990.0
+      },
+      {
+        "designation": "VISMED GEL 20 - MENA",
+        "sku": "1328",
+        "qty": 23,
+        "unit_price": 512000.0
+      }
+    ],
+    "outcome": "pass",
+    "customer_code": "9000021",
+    "intruder_index": null
+  },
+  {
+    "source": "france.pdf",
+    "out": "france",
+    "skin": "trb_orderform",
+    "lang": "fr",
+    "client_name": "Léman Pharma Distribution SAS",
+    "sender": {
+      "name": "LÉMAN PHARMA DISTRIBUTION SAS",
+      "lines": [
+        "ArchParc – ActiTech 4",
+        "60 Avenue Marie Curie",
+        "CS 40218 – 74160 Archamps"
+      ],
+      "contact": "M. Stéphane Ruault",
+      "tel": "+33 4 50 95 09 04"
+    },
+    "recipient": {
+      "name": "TRB CHEMEDICA INTERNATIONAL S.A.",
+      "lines": [
+        "Route des Jeunes 33bis",
+        "1227 Carouge GE",
+        "Switzerland"
+      ]
+    },
+    "partner_reference": "2026-22",
+    "order_date": "21.04.2026",
+    "requested_delivery_date": "Semaine 11 (Mars 2027)",
+    "currency": "EUR",
+    "notes": "Moyen d'expédition : PORTEUR avec HAYON avec transpalette. Merci de respecter le délai.",
+    "lines": [
+      {
+        "designation": "OSTENIL PLUS 1 - EU-WEST",
+        "sku": "1013",
+        "qty": 20,
+        "unit_price": 88888.0
+      }
+    ],
+    "outcome": "pass",
+    "customer_code": "9000022",
+    "intruder_index": null
+  },
+  {
+    "source": "malaysia.pdf",
+    "out": "malaysia",
+    "skin": "modern",
+    "lang": "en",
+    "client_name": "Selatan Vision Sdn Bhd",
+    "sender": {
+      "name": "SELATAN VISION SDN BHD",
+      "lines": [
+        "Lot 6, Persiaran Perusahaan",
+        "Seksyen 23, 40300 Shah Alam",
+        "Selangor, Malaysia"
+      ],
+      "contact": "Elaine Sia",
+      "tel": "603-2856 1122"
+    },
+    "recipient": {
+      "name": "TRB CHEMEDICA INTERNATIONAL S.A.",
+      "lines": [
+        "Route des Jeunes 33bis",
+        "1227 Carouge GE",
+        "Switzerland"
+      ]
+    },
+    "partner_reference": "TRBM-PO-26014",
+    "order_date": "10.07.2026",
+    "requested_delivery_date": "October 2026",
+    "currency": "EUR",
+    "notes": "Shelf life at least 24 months upon receipt (except sample pack).",
+    "lines": [
+      {
+        "designation": "VISMED 20 - N",
+        "sku": "0687",
+        "qty": 20,
+        "unit_price": 125000.0
+      },
+      {
+        "designation": "VISMED 60 - N",
+        "sku": "0846",
+        "qty": 3,
+        "unit_price": 74250.0
+      },
+      {
+        "designation": "VISMED MULTI 10 - N (INT) std",
+        "sku": "1083",
+        "qty": 18,
+        "unit_price": 199990.0
+      },
+      {
+        "designation": "VISMED GEL 20 - N",
+        "sku": "0899",
+        "qty": 14,
+        "unit_price": 42600.0
+      },
+      {
+        "designation": "VISMED GEL MULTI 10 - N (INT)",
+        "sku": "1255",
+        "qty": 6,
+        "unit_price": 312000.0
+      },
+      {
+        "designation": "VISMED 5 - N",
+        "sku": "1658",
+        "qty": 11,
+        "unit_price": 96500.0
+      },
+      {
+        "designation": "VISMED GEL 5 - N",
+        "sku": "1659",
+        "qty": 8,
+        "unit_price": 158000.0
+      }
+    ],
+    "outcome": "pass",
+    "customer_code": "9000023",
+    "intruder_index": null
+  },
+  {
+    "source": "dekhon.pdf",
+    "out": "dekhon",
+    "skin": "invoice",
+    "lang": "en",
+    "client_name": "Indus Crescent Pharma (Pvt) Ltd",
+    "sender": {
+      "name": "INDUS CRESCENT PHARMA (PVT) LTD",
+      "lines": [
+        "11-C, Old FCC Ferozpur Road",
+        "Lahore",
+        "Pakistan"
+      ],
+      "contact": "Muhammad Ali",
+      "tel": "+92 42 3571 6395"
+    },
+    "recipient": {
+      "name": "TRB CHEMEDICA INTERNATIONAL S.A.",
+      "lines": [
+        "Rue Michel-Servet 12",
+        "1206 Geneva",
+        "Switzerland"
+      ]
+    },
+    "partner_reference": "OF-2026-6",
+    "order_date": "09.06.2026",
+    "requested_delivery_date": "15.12.2026",
+    "currency": "EUR",
+    "notes": "Shipping term: EX WORKS. 90 days from invoice date.",
+    "lines": [
+      {
+        "designation": "VISMED MULTI 10 - N (INT) std",
+        "sku": "1083",
+        "qty": 28,
+        "unit_price": 249000.0
+      },
+      {
+        "designation": "VISMED GEL MULTI 10 - N (INT)",
+        "sku": "1255",
+        "qty": 15,
+        "unit_price": 61750.0
+      }
+    ],
+    "outcome": "pass",
+    "customer_code": "9000024",
+    "intruder_index": null
+  },
+  {
+    "source": "propharma.pdf",
+    "out": "propharma",
+    "skin": "invoice",
+    "lang": "en",
+    "client_name": "Gulf Meridian Medical Supplies L.L.C.",
+    "sender": {
+      "name": "GULF MERIDIAN MEDICAL SUPPLIES L.L.C.",
+      "lines": [
+        "Al Ain Building M-35, Mussaffah",
+        "Abu Dhabi, P.O. Box 47612",
+        "United Arab Emirates"
+      ],
+      "contact": "Procurement",
+      "tel": "+971 2 6734781"
+    },
+    "recipient": {
+      "name": "TRB CHEMEDICA INTERNATIONAL S.A.",
+      "lines": [
+        "Rue Michel-Servet 12",
+        "1206 Geneva",
+        "Switzerland"
+      ]
+    },
+    "partner_reference": "POR-13008",
+    "order_date": "01.10.2025",
+    "requested_delivery_date": "October 2025",
+    "currency": "USD",
+    "notes": "100% Advance payment. Non-hazardous shipment. Please label properly.",
+    "lines": [
+      {
+        "designation": "OSTENIL 1 - EU-WEST",
+        "sku": "0587",
+        "qty": 21,
+        "unit_price": 404040.0
+      },
+      {
+        "designation": "OSTENIL PLUS 1 - EU-WEST",
+        "sku": "1013",
+        "qty": 12,
+        "unit_price": 137900.0
+      },
+      {
+        "designation": "OSTENIL TENDON 1 - EU-WEST",
+        "sku": "1203",
+        "qty": 5,
+        "unit_price": 275500.0
+      }
+    ],
+    "outcome": "pass",
+    "customer_code": "9000025",
+    "intruder_index": null
+  }
+]
