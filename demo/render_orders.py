@@ -164,7 +164,8 @@ def skin_invoice(o):
     <div class="inv-meta">
       <div>{'Fecha' if es else 'Date'}: <b>{e(o["order_date"])}</b> &nbsp;|&nbsp;
            N°: <b>{e(o["partner_reference"])}</b> &nbsp;|&nbsp;
-           {'Moneda' if es else 'Currency'}: <b>{cur}</b></div>
+           {'Moneda' if es else 'Currency'}: <b>{cur}</b> &nbsp;|&nbsp;
+           {'Entrega' if es else 'Delivery date'}: <b>{e(o["requested_delivery_date"])}</b></div>
       <div class="prov"><span class="lbl">{prov}:</span> {addr_html(o["recipient"], bold_name=False)}</div>
     </div>
     <table class="grid">
@@ -315,7 +316,8 @@ def skin_modern(o):
     </div>
     <div class="mod-meta">
       <div><b>Purchase Order:</b> {e(o["partner_reference"])}<br>
-           <b>Date:</b> {e(o["order_date"])}</div>
+           <b>Date:</b> {e(o["order_date"])}<br>
+           <b>Delivery Date:</b> {e(o["requested_delivery_date"])}</div>
       <div class="r"><b>Currency:</b> {cur}<br><b>Payment Terms:</b> 90 days</div>
     </div>
     <div class="grid-two">
