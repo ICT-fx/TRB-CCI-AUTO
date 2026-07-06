@@ -46,9 +46,10 @@ bullet(doc, [("le livrable attendu de votre part", True), (" : le gabarit d'impo
 
 # ============ 2. DONNEES FOURNIES ============
 doc.add_heading("2. Les données que nous fournissons", level=1)
-para(doc, "Une CCI correspond à une commande client : un en-tête (le client et ses références) et "
-     "une ou plusieurs lignes (article + quantité). Nous pouvons produire ces champs dans l'ordre, "
-     "avec les intitulés et le format que vous préciserez dans votre gabarit.")
+para(doc, "Un fichier d'import correspond à un lot : il regroupe plusieurs commandes. Chaque "
+     "commande (CCI) a un en-tête (le client et ses références) et une ou plusieurs lignes "
+     "(article + quantité). Nous pouvons produire ces champs dans l'ordre, avec les intitulés et "
+     "le format que vous préciserez dans votre gabarit.")
 
 para(doc, "En-tête de commande (une fois par CCI)", bold=True, color=TRB_BLUE, space_before=4)
 table(doc,
@@ -70,10 +71,15 @@ table(doc,
       ],
       widths=[1.9, 3.0, 1.8])
 
+callout(doc,
+        "Un fichier d'import = un LOT de plusieurs commandes (pas un fichier par commande). "
+        "Au sein du lot, les lignes d'une même commande sont regroupées par leur en-tête — "
+        "nous prévoyons la clé « Clé 1 + référence partenaire ».",
+        label="Important :")
+
 para(doc, "Le nom du client n'est là que pour faciliter le contrôle visuel : il peut être ignoré "
-     "à l'import. Le format exact (colonnes, ordre, format de date, séparateur décimal, encodage, "
-     "un fichier par commande ou un fichier par lot regroupant plusieurs commandes) suivra votre "
-     "gabarit — voir sections 4 et 5.", italic=True, color=GREY, size=10)
+     "à l'import. Le format exact (colonnes, ordre, format de date, séparateur décimal, encodage) "
+     "suivra votre gabarit — voir sections 4 et 5.", italic=True, color=GREY, size=10)
 
 # ============ 3. A COMPLETER PAR PROCONCEPT ============
 doc.add_heading("3. Ce que ProConcept doit compléter automatiquement", level=1)
@@ -108,7 +114,7 @@ para(doc, "Idéalement : un fichier gabarit vide, un exemple rempli, et une cour
 doc.add_heading("5. Points à préciser ensemble", level=1)
 para(doc, "Quelques questions pour caler le gabarit :")
 bullet(doc, "Quels champs sont réellement obligatoires côté ProConcept pour créer une CCI ? Notre liste (section 2) est-elle suffisante, ou manque-t-il quelque chose ?")
-bullet(doc, "Un import correspond-il à une seule commande, ou un fichier peut-il contenir plusieurs commandes (lot) ? Comment les lignes sont-elles rattachées à leur en-tête (clé de regroupement) ?")
+bullet(doc, "Un fichier contient un lot de plusieurs commandes : confirmez-vous que ProConcept sait créer plusieurs CCI depuis un seul fichier, et que le regroupement des lignes par « Clé 1 + référence partenaire » vous convient ?")
 bullet(doc, "Existe-t-il une fonction d'import standard dans ProConcept (Excel / CSV / XML), ou faut-il un développement spécifique ?")
 bullet(doc, "Quels format de date, séparateur décimal et encodage attendez-vous ?")
 bullet(doc, "Que se passe-t-il si un client (Clé 1) ou un article (SKU) n'existe pas encore dans ProConcept — rejet, ou création ?")
@@ -116,17 +122,20 @@ bullet(doc, "Le prix unitaire doit-il venir du tarif ProConcept, ou pouvons-nous
 
 # ============ 6. EXEMPLE ============
 doc.add_heading("6. Exemple de jeu de données (illustratif)", level=1)
-para(doc, "Une commande de deux articles. La mise en forme exacte (colonnes, ordre, un ou plusieurs "
-     "fichiers) suivra votre gabarit — cet exemple sert uniquement à illustrer le contenu.")
+para(doc, "Un seul fichier contenant un lot de deux commandes. La mise en forme exacte (colonnes, "
+     "ordre) suivra votre gabarit — cet exemple sert uniquement à illustrer le contenu.")
 table(doc,
       ["Clé 1", "Nom du client (ignoré)", "Référence partenaire", "Date de livraison", "SKU", "Quantité"],
       [
         ["2780008", "Pharmacie Dupont", "CMD-4471", "15/07/2026", "1311", "100"],
         ["2780008", "Pharmacie Dupont", "CMD-4471", "15/07/2026", "1274", "50"],
+        ["2455301", "Clinique du Lac", "BC-2098", "20/07/2026", "1311", "30"],
       ],
       widths=[0.9, 1.7, 1.5, 1.3, 0.7, 0.8])
-para(doc, "Ici, les deux lignes appartiennent à la même commande (même Clé 1 + même référence "
-     "partenaire) : elles forment une seule CCI à deux lignes.", italic=True, color=GREY, size=10)
+para(doc, "Ce fichier est un lot de deux commandes : la première (Clé 1 2780008 / réf. CMD-4471) a "
+     "deux lignes, la seconde (Clé 1 2455301 / réf. BC-2098) en a une. Les lignes sont regroupées "
+     "en commandes par « Clé 1 + référence partenaire » → ProConcept crée ici deux CCI.",
+     italic=True, color=GREY, size=10)
 
 doc.save(OUT)
 print("OK:", OUT)
