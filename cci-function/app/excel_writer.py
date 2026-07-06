@@ -1,15 +1,18 @@
 """Génération de l'Excel CCI avec openpyxl — format forcé, déterministe.
 
-Une ligne par commande : les champs d'en-tête une fois (champs extraits + code
-Customer « Clé 1 »), puis les produits étalés en colonnes (SKU i / Quantité i),
-puis la colonne « Nom du fichier » (nom composé client + date, pour retrouver la
-commande à la main).
+Format LONG : **une ligne par article**. Les colonnes sont fixes —
+`Nom du client | Clé 1 | Référence partenaire | Date de livraison souhaitée |
+SKU | Quantité | Nom du fichier`. Les champs d'en-tête (dont la **Clé 1** et la
+**Référence partenaire**) sont **répétés à l'identique** sur chaque ligne d'une
+même commande : c'est ce couple qui permet de regrouper les articles d'une même
+commande. Une commande de N articles = N lignes.
 
 Le SKU écrit est le SKU RÉSOLU (correct, issu du catalogue du client). Seuls les
 SKU AMBIGUS (l'IA a hésité entre plusieurs produits proches) sont surlignés
-jaune = à vérifier ; les corrections évidentes ne le sont pas. Il n'y a plus de
-colonne de statut : le jaune est le seul signal. Claude n'écrit jamais ce
-fichier : le code impose mécaniquement les colonnes.
+jaune = à vérifier ; les corrections évidentes ne le sont pas. Une Clé 1 vide ou
+une date imprécise (« A-revoir manuellement ») sont aussi surlignées jaune. Il
+n'y a pas de colonne de statut : le jaune est le seul signal. Claude n'écrit
+jamais ce fichier : le code impose mécaniquement les colonnes.
 """
 
 from __future__ import annotations
@@ -35,9 +38,9 @@ _HIGHLIGHT_FILL = "FFFFFF00"  # jaune : à vérifier (SKU ambigu / Clé 1 vide)
 # Détecte une chaîne susceptible d'être interprétée comme formule par Excel.
 _FORMULA_PREFIX = re.compile(r"^[=+\-@\t\r]")
 
-# 2 colonnes par produit : SKU (résolu) / Quantité. Le statut n'est pas une
-# colonne : un SKU ambigu est simplement surligné jaune.
-_PRODUCT_COLS_PER_ITEM = 2
+# Format long : 2 colonnes fixes SKU / Quantité (une ligne par article).
+# Le statut n'est pas une colonne : un SKU ambigu est simplement surligné jaune.
+_SKU_QTY_HEADERS = ["SKU", "Quantité"]
 
 # Colonne de diagnostic (en fin de ligne) : le nom composé du fichier.
 _DIAGNOSTIC_COLUMNS = ["Nom du fichier"]
@@ -71,11 +74,26 @@ def _is_empty(value) -> bool:
     return False
 
 
-def _product_headers(max_products: int) -> list[str]:
-    headers: list[str] = []
-    for i in range(1, max_products + 1):
-        headers += [f"SKU {i}", f"Quantité {i}"]
-    return headers
+def _append_order_rows(
+    ws, fixed_values: list, products: list[tuple], filename, yellow,
+    *, cle1_col: int | None, date_col: int | None, sku_col: int,
+) -> None:
+    """Ajoute UNE LIGNE PAR ARTICLE (format long) et répète les champs d'en-tête.
+
+    `products` : liste de `(sku, quantity, ambiguous)`. Une commande sans article
+    produit tout de même une ligne (SKU/Quantité vides) pour ne pas la perdre.
+    Surlignage jaune : Clé 1 vide, date « A-revoir manuellement », SKU ambigu.
+    """
+    lines = products or [(None, None, False)]
+    for sku, qty, ambiguous in lines:
+        ws.append([_safe_cell(v) for v in (list(fixed_values) + [sku, qty, filename])])
+        r = ws.max_row
+        if cle1_col and _is_empty(fixed_values[cle1_col - 1]):
+            ws.cell(row=r, column=cle1_col).fill = yellow
+        if date_col and fixed_values[date_col - 1] == DELIVERY_DATE_REVIEW:
+            ws.cell(row=r, column=date_col).fill = yellow
+        if ambiguous:
+            ws.cell(row=r, column=sku_col).fill = yellow
 
 
 def _finish_sheet(ws, headers: list[str]) -> None:
@@ -114,11 +132,12 @@ _DATE_LABEL = "Date de livraison souhaitée"
 
 
 def build_consolidated_workbook(rows: list[dict]) -> bytes:
-    """Construit l'Excel CCI consolidé : 1 feuille, 1 ligne par record.
+    """Construit l'Excel CCI consolidé : 1 feuille, **1 ligne par article**.
 
-    Colonnes : en-têtes fixes, puis `SKU i / Quantité i` pour i = 1..MAX, puis
-    « Nom du fichier ». Les SKU ambigus et une Clé 1 manquante sont surlignés
-    jaune.
+    Colonnes fixes : en-têtes (dont Clé 1 + Référence partenaire), puis `SKU` /
+    `Quantité`, puis « Nom du fichier ». Les articles d'une même commande partagent
+    la même Clé 1 et la même référence (lignes répétées). Les SKU ambigus, une
+    Clé 1 manquante et une date imprécise sont surlignés jaune.
 
     `rows` vide ⇒ classeur valide avec uniquement les en-têtes.
     """
@@ -128,45 +147,26 @@ def build_consolidated_workbook(rows: list[dict]) -> bytes:
     ws = wb.active
     ws.title = SHEET_NAME
 
-    max_products = max((len(r.get("products") or []) for r in rows), default=0)
-    max_products = max(max_products, 1)
-
     fixed = _FIXED_HEADER_COLUMNS
-    headers: list[str] = [label for label, _ in fixed]
-    headers += _product_headers(max_products)
-    headers += _DIAGNOSTIC_COLUMNS
+    headers: list[str] = [label for label, _ in fixed] + _SKU_QTY_HEADERS + _DIAGNOSTIC_COLUMNS
     ws.append(headers)
 
     cle1_col = next((i for i, (label, _) in enumerate(fixed, start=1) if label == _CLE1_LABEL), None)
     date_col = next((i for i, (label, _) in enumerate(fixed, start=1) if label == _DATE_LABEL), None)
+    sku_col = len(fixed) + 1
     yellow = PatternFill("solid", fgColor=_HIGHLIGHT_FILL)
 
     for record in rows:
-        values: list = [getter(record) for _, getter in fixed]
-        products = record.get("products") or []
-        statuses: list[str | None] = []
-        for i in range(max_products):
-            if i < len(products):
-                p = products[i] or {}
-                values += [p.get("sku"), p.get("quantity")]
-                statuses.append(p.get("sku_status"))
-            else:
-                values += [None, None]
-                statuses.append(None)
-        values += [record.get("suggested_filename") or record.get("filename")]
-
-        ws.append([_safe_cell(v) for v in values])
-        row_idx = ws.max_row
-
-        # Surlignage : Clé 1 vide (anormal) + date imprécise + chaque SKU ambigu.
-        if cle1_col and _is_empty(values[cle1_col - 1]):
-            ws.cell(row=row_idx, column=cle1_col).fill = yellow
-        if date_col and values[date_col - 1] == DELIVERY_DATE_REVIEW:
-            ws.cell(row=row_idx, column=date_col).fill = yellow
-        for i, status in enumerate(statuses):
-            if status == "ambigu":
-                sku_col = len(fixed) + i * _PRODUCT_COLS_PER_ITEM + 1
-                ws.cell(row=row_idx, column=sku_col).fill = yellow
+        fixed_values = [getter(record) for _, getter in fixed]
+        products = [
+            ((p or {}).get("sku"), (p or {}).get("quantity"), (p or {}).get("sku_status") == "ambigu")
+            for p in (record.get("products") or [])
+        ]
+        filename = record.get("suggested_filename") or record.get("filename")
+        _append_order_rows(
+            ws, fixed_values, products, filename, yellow,
+            cle1_col=cle1_col, date_col=date_col, sku_col=sku_col,
+        )
 
     _finish_sheet(ws, headers)
     buffer = io.BytesIO()
@@ -212,35 +212,24 @@ def build_error_report(rows: list[dict]) -> bytes:
 def build_workbook(
     order: OrderExtraction, resolution: Resolution, file_name: str
 ) -> bytes:
-    """Construit le classeur .xlsx (1 ligne) et renvoie ses octets."""
+    """Construit le classeur .xlsx (1 ligne par article) et renvoie ses octets."""
     wb = Workbook()
     ws = wb.active
     ws.title = SHEET_NAME
 
-    n = len(order.products)
-    headers: list[str] = [label for label, _ in _HEADER_COLUMNS]
-    headers += _product_headers(n)
-    headers += _DIAGNOSTIC_COLUMNS
+    headers: list[str] = [label for label, _ in _HEADER_COLUMNS] + _SKU_QTY_HEADERS + _DIAGNOSTIC_COLUMNS
     ws.append(headers)
 
-    row: list = [getter(order, resolution) for _, getter in _HEADER_COLUMNS]
-    for p in order.products:
-        row += [p.resolved_sku, p.quantity]
-    row += [suggested_filename(order.customer_name, order.requested_delivery_date, file_name)]
-    ws.append([_safe_cell(v) for v in row])
-    row_idx = ws.max_row
-
-    yellow = PatternFill("solid", fgColor=_HIGHLIGHT_FILL)
+    fixed_values = [getter(order, resolution) for _, getter in _HEADER_COLUMNS]
+    products = [(p.resolved_sku, p.quantity, p.sku_status == "ambigu") for p in order.products]
+    filename = suggested_filename(order.customer_name, order.requested_delivery_date, file_name)
     cle1_col = next((i for i, (label, _) in enumerate(_HEADER_COLUMNS, start=1) if label == _CLE1_LABEL), None)
     date_col = next((i for i, (label, _) in enumerate(_HEADER_COLUMNS, start=1) if label == _DATE_LABEL), None)
-    if cle1_col and _is_empty(row[cle1_col - 1]):
-        ws.cell(row=row_idx, column=cle1_col).fill = yellow
-    if date_col and row[date_col - 1] == DELIVERY_DATE_REVIEW:
-        ws.cell(row=row_idx, column=date_col).fill = yellow
-    for i, p in enumerate(order.products):
-        if p.sku_status == "ambigu":
-            sku_col = len(_HEADER_COLUMNS) + i * _PRODUCT_COLS_PER_ITEM + 1
-            ws.cell(row=row_idx, column=sku_col).fill = yellow
+    yellow = PatternFill("solid", fgColor=_HIGHLIGHT_FILL)
+    _append_order_rows(
+        ws, fixed_values, products, filename, yellow,
+        cle1_col=cle1_col, date_col=date_col, sku_col=len(_HEADER_COLUMNS) + 1,
+    )
 
     _finish_sheet(ws, headers)
     buffer = io.BytesIO()

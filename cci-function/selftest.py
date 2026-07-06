@@ -108,29 +108,37 @@ def main() -> int:
     wb = load_workbook(out_path)
     ws = wb.active
     headers = [c.value for c in ws[1]]
-    data = [c.value for c in ws[2]]
-    print("\nColonnes :")
-    for h, v in zip(headers, data):
-        print(f"  {h:22} = {v!r}")
+    data_rows = [[c.value for c in ws[r]] for r in range(2, ws.max_row + 1)]
+    print("\nColonnes :", headers)
+    for dr in data_rows:
+        print("  ", dict(zip(headers, dr)))
 
-    row = dict(zip(headers, data))
-    # Colonnes retirées : plus de statut SKU, ni Confiance / Statut / Note qualité.
+    # Format LONG : colonnes fixes ; pas de SKU i / Quantité i ni de statut.
     for removed in (
-        "SKU 1 (statut)", "SKU 2 (statut)", "Confiance", "Statut",
-        "Note qualité", "Numéro de TVA", "Valeur 1",
+        "SKU 1", "Quantité 1", "SKU 2", "Quantité 2", "SKU 1 (statut)",
+        "Confiance", "Statut", "Note qualité", "Numéro de TVA", "Valeur 1",
     ):
         assert removed not in headers, f"Colonne {removed!r} aurait dû être absente."
+    assert headers[-3:] == ["SKU", "Quantité", "Nom du fichier"], headers
 
-    assert row["Clé 1"] == "2780008", "Clé 1 (code Customer) doit être remplie."
-    assert row["Nom du client"] == "Dea Lens Project"
-    assert row["Référence partenaire"] == "PO-2026-00042"
-    assert row["Date de livraison souhaitée"] == "15/07/2026", "Date au format JJ/MM/AAAA."
-    assert row["SKU 1"] == "1311" and row["Quantité 1"] == 100
-    assert row["SKU 2"] == "1136" and row["Quantité 2"] == 50
+    # 2 articles ⇒ 2 lignes, avec les MÊMES champs d'en-tête (même commande).
+    assert len(data_rows) == 2, f"Attendu 2 lignes (1/article), obtenu {len(data_rows)}."
+    l1 = dict(zip(headers, data_rows[0]))
+    l2 = dict(zip(headers, data_rows[1]))
+    for key in ("Nom du client", "Clé 1", "Référence partenaire",
+                "Date de livraison souhaitée", "Nom du fichier"):
+        assert l1[key] == l2[key], f"{key!r} doit être identique sur les 2 lignes."
+
+    assert l1["Clé 1"] == "2780008", "Clé 1 (code Customer) doit être remplie."
+    assert l1["Nom du client"] == "Dea Lens Project"
+    assert l1["Référence partenaire"] == "PO-2026-00042"
+    assert l1["Date de livraison souhaitée"] == "15/07/2026", "Date au format JJ/MM/AAAA."
+    assert l1["SKU"] == "1311" and l1["Quantité"] == 100
+    assert l2["SKU"] == "1136" and l2["Quantité"] == 50
     # Nom du fichier = nom composé « client - JJ-MM-AAAA » + extension.
     attendu = suggested_filename("Dea Lens Project", "15/07/2026", "commande_test.pdf")
     assert attendu == "Dea Lens Project - 15-07-2026.pdf", attendu
-    assert row["Nom du fichier"] == attendu, row["Nom du fichier"]
+    assert l1["Nom du fichier"] == attendu, l1["Nom du fichier"]
 
     # Surlignage : SKU 1 (ambigu) en jaune, SKU 2 (corrigé évident) PAS en jaune.
     def _fill_rgb(col_label):
