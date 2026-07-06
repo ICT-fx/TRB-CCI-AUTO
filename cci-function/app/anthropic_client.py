@@ -16,7 +16,7 @@ from typing import Literal, Union
 from anthropic import Anthropic
 
 from . import config
-from .models import OrderExtraction, ProductLine
+from .models import DELIVERY_DATE_REVIEW, OrderExtraction, ProductLine
 from .schema import (
     EXTRACT_ORDER_TOOL,
     EXTRACTION_SYSTEM_PROMPT,
@@ -174,44 +174,93 @@ def resolve_order(order: OrderExtraction, master_context: str) -> dict:
     return tool_use.input or {}
 
 
-def _first_business_day(year: int, month: int) -> datetime.date:
-    """1er jour du mois, décalé au lundi si c'est un samedi/dimanche."""
-    d = datetime.date(year, month, 1)
-    while d.weekday() >= 5:  # 5 = samedi, 6 = dimanche
-        d += datetime.timedelta(days=1)
-    return d
+# Noms de mois (anglais + français, formes pleines et abrégées) -> numéro.
+_MONTHS = {
+    "january": 1, "february": 2, "march": 3, "april": 4, "may": 5, "june": 6,
+    "july": 7, "august": 8, "september": 9, "october": 10, "november": 11,
+    "december": 12,
+    "jan": 1, "feb": 2, "mar": 3, "apr": 4, "jun": 6, "jul": 7, "aug": 8,
+    "sep": 9, "sept": 9, "oct": 10, "nov": 11, "dec": 12,
+    "janvier": 1, "février": 2, "fevrier": 2, "mars": 3, "avril": 4, "mai": 5,
+    "juin": 6, "juillet": 7, "août": 8, "aout": 8, "septembre": 9,
+    "octobre": 10, "novembre": 11, "décembre": 12, "decembre": 12,
+    "janv": 1, "févr": 2, "fevr": 2, "avr": 4, "juil": 7, "déc": 12,
+}
+
+# Une date exprimée en TRIMESTRE ou en SEMAINE ne désigne jamais un jour précis :
+# on ne devine pas, on la marque « A-revoir manuellement ».
+_QUARTER_RE = re.compile(r"\b(?:q[1-4]|t[1-4]|trimestre|quarter)\b", re.I)
+_WEEK_RE = re.compile(r"\bkw\s*\d|\bsemaine\b|\bweek\b|\bwk\b|\b[ws]\s?\d{1,2}\b", re.I)
+
+
+def _mk_date(day: int, month: int, year: int) -> str:
+    """JJ/MM/AAAA si (jour, mois, année) est une date réelle, sinon revue manuelle."""
+    try:
+        return datetime.date(year, month, day).strftime("%d/%m/%Y")
+    except ValueError:
+        return DELIVERY_DATE_REVIEW
+
+
+def _month_year(s: str) -> tuple[int, int] | None:
+    """(mois, année) si la chaîne contient un nom de mois + une année, sinon None."""
+    low = s.lower()
+    ym = re.search(r"\b(\d{4})\b", low)
+    if not ym:
+        return None
+    year = int(ym.group(1))
+    for token, num in _MONTHS.items():
+        if re.search(r"\b" + re.escape(token) + r"\b", low):
+            return num, year
+    return None
 
 
 def _format_delivery_date(raw) -> str | None:
-    """Normalise la date de livraison au format strict JJ/MM/AAAA.
+    """Normalise la date au format STRICT JJ/MM/AAAA (règle : jour exact OU mois).
 
-    - AAAA-MM-JJ  -> JJ/MM/AAAA
-    - AAAA-MM     -> 1er jour ouvré du mois, au format JJ/MM/AAAA
-    - JJ/MM/AAAA  -> inchangé
-    - autre       -> renvoyé tel quel (dernier recours)
+    - jour connu (AAAA-MM-JJ, JJ/MM/AAAA, JJ.MM.AAAA…) -> JJ/MM/AAAA
+    - mois + année seulement (AAAA-MM, « octobre 2026 ») -> 01/MM/AAAA (1er du mois)
+    - trimestre / semaine / date non résoluble -> « A-revoir manuellement »
+    - vide / absent -> None (champ manquant -> 422)
+
+    On n'émet JAMAIS une valeur brute non conforme : soit un JJ/MM/AAAA réel,
+    soit le marqueur de revue manuelle (surligné jaune dans l'Excel).
     """
     if raw is None:
         return None
     s = str(raw).strip()
     if not s:
         return None
-    m = re.fullmatch(r"(\d{4})-(\d{2})-(\d{2})", s)
+
+    # Imprécis d'abord : un trimestre ou une semaine ne donne jamais un jour.
+    if _QUARTER_RE.search(s) or _WEEK_RE.search(s):
+        return DELIVERY_DATE_REVIEW
+
+    # Jour exact
+    m = re.fullmatch(r"(\d{4})-(\d{1,2})-(\d{1,2})", s)             # AAAA-MM-JJ
     if m:
         y, mo, dd = (int(x) for x in m.groups())
-        try:
-            return datetime.date(y, mo, dd).strftime("%d/%m/%Y")
-        except ValueError:
-            return s
-    m = re.fullmatch(r"(\d{4})-(\d{2})", s)
+        return _mk_date(dd, mo, y)
+    m = re.fullmatch(r"(\d{1,2})[/.\-](\d{1,2})[/.\-](\d{4})", s)   # JJ/MM/AAAA
+    if m:
+        dd, mo, y = (int(x) for x in m.groups())
+        return _mk_date(dd, mo, y)
+
+    # Mois précis -> 1er du mois
+    m = re.fullmatch(r"(\d{4})-(\d{1,2})", s)                       # AAAA-MM
     if m:
         y, mo = (int(x) for x in m.groups())
-        try:
-            return _first_business_day(y, mo).strftime("%d/%m/%Y")
-        except ValueError:
-            return s
-    if re.fullmatch(r"\d{2}/\d{2}/\d{4}", s):
-        return s
-    return s
+        return _mk_date(1, mo, y)
+    m = re.fullmatch(r"(\d{1,2})[/.\-](\d{4})", s)                  # MM/AAAA
+    if m:
+        mo, y = (int(x) for x in m.groups())
+        return _mk_date(1, mo, y)
+    my = _month_year(s)                                            # « octobre 2026 »
+    if my:
+        mo, y = my
+        return _mk_date(1, mo, y)
+
+    # Non résoluble en JJ/MM/AAAA -> revue manuelle (strict : jamais de brut).
+    return DELIVERY_DATE_REVIEW
 
 
 def _coerce_number(value) -> float | None:

@@ -19,6 +19,13 @@ _SKU_RE = re.compile(r"^\d{4}$")
 # Caractères interdits dans un nom de fichier (SharePoint / Windows).
 _ILLEGAL_FILENAME = re.compile(r'[\\/:*?"<>|\r\n\t]')
 
+# Marqueur « date pas assez précise » : quand la date de livraison n'est ni un
+# jour exact ni un mois précis (trimestre, semaine, date non résoluble), on ne
+# devine PAS un jour. La cellule Excel correspondante porte ce texte et est
+# surlignée jaune = à corriger à la main. La commande n'est PAS rejetée pour
+# autant (elle reste dans l'Excel consolidé).
+DELIVERY_DATE_REVIEW = "A-revoir manuellement"
+
 
 def suggested_filename(
     customer_name: Optional[str],
@@ -33,7 +40,10 @@ def suggested_filename(
     """
     name = _ILLEGAL_FILENAME.sub(" ", (customer_name or "").strip())
     name = re.sub(r"\s+", " ", name).strip()
-    date_part = (delivery_date or "").strip().replace("/", "-")
+    raw_date = (delivery_date or "").strip()
+    if raw_date == DELIVERY_DATE_REVIEW:  # date imprécise : ne pas la mettre dans le nom
+        raw_date = ""
+    date_part = raw_date.replace("/", "-")
     parts = [p for p in (name, date_part) if p]
     ext = os.path.splitext(original_filename or "")[1]
     if not parts:

@@ -20,7 +20,12 @@ import re
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Font, PatternFill
 
-from .models import OrderExtraction, Resolution, suggested_filename
+from .models import (
+    DELIVERY_DATE_REVIEW,
+    OrderExtraction,
+    Resolution,
+    suggested_filename,
+)
 
 SHEET_NAME = "CCI"
 _HEADER_FILL = "FF15578F"  # bleu TRB
@@ -105,6 +110,7 @@ _FIXED_HEADER_COLUMNS: list[tuple[str, object]] = [
 ]
 
 _CLE1_LABEL = "Clé 1"
+_DATE_LABEL = "Date de livraison souhaitée"
 
 
 def build_consolidated_workbook(rows: list[dict]) -> bytes:
@@ -132,6 +138,7 @@ def build_consolidated_workbook(rows: list[dict]) -> bytes:
     ws.append(headers)
 
     cle1_col = next((i for i, (label, _) in enumerate(fixed, start=1) if label == _CLE1_LABEL), None)
+    date_col = next((i for i, (label, _) in enumerate(fixed, start=1) if label == _DATE_LABEL), None)
     yellow = PatternFill("solid", fgColor=_HIGHLIGHT_FILL)
 
     for record in rows:
@@ -151,9 +158,11 @@ def build_consolidated_workbook(rows: list[dict]) -> bytes:
         ws.append([_safe_cell(v) for v in values])
         row_idx = ws.max_row
 
-        # Surlignage : Clé 1 vide (anormal) + chaque SKU ambigu (à vérifier).
+        # Surlignage : Clé 1 vide (anormal) + date imprécise + chaque SKU ambigu.
         if cle1_col and _is_empty(values[cle1_col - 1]):
             ws.cell(row=row_idx, column=cle1_col).fill = yellow
+        if date_col and values[date_col - 1] == DELIVERY_DATE_REVIEW:
+            ws.cell(row=row_idx, column=date_col).fill = yellow
         for i, status in enumerate(statuses):
             if status == "ambigu":
                 sku_col = len(fixed) + i * _PRODUCT_COLS_PER_ITEM + 1
@@ -223,8 +232,11 @@ def build_workbook(
 
     yellow = PatternFill("solid", fgColor=_HIGHLIGHT_FILL)
     cle1_col = next((i for i, (label, _) in enumerate(_HEADER_COLUMNS, start=1) if label == _CLE1_LABEL), None)
+    date_col = next((i for i, (label, _) in enumerate(_HEADER_COLUMNS, start=1) if label == _DATE_LABEL), None)
     if cle1_col and _is_empty(row[cle1_col - 1]):
         ws.cell(row=row_idx, column=cle1_col).fill = yellow
+    if date_col and row[date_col - 1] == DELIVERY_DATE_REVIEW:
+        ws.cell(row=row_idx, column=date_col).fill = yellow
     for i, p in enumerate(order.products):
         if p.sku_status == "ambigu":
             sku_col = len(_HEADER_COLUMNS) + i * _PRODUCT_COLS_PER_ITEM + 1
