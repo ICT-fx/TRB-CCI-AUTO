@@ -69,7 +69,7 @@ def skin_sap(o):
         )
     meta = [
         ("PO No.", o["partner_reference"]), ("PO Date", o["order_date"]),
-        ("Currency", cur), ("Arrival Date", o["requested_delivery_date"]),
+        ("Currency", cur), ("Delivery Date", o["requested_delivery_date"]),
     ]
     meta_html = "".join(f'<div><span>{e(k)}</span>: {e(v)}</div>' for k, v in meta)
     return f"""
@@ -360,7 +360,8 @@ def skin_dotmatrix(o):
       &nbsp;&nbsp; Casablanca le, {e(o["order_date"])}</div>
     <div class="dm-modes">
       Mode de livraison : CIF &nbsp; | &nbsp; Devise : {cur} &nbsp; | &nbsp;
-      Règlement : 90 jours net
+      Règlement : 90 jours net<br>
+      <b>Date de livraison souhaitée : {e(o["requested_delivery_date"])}</b>
     </div>
     <table class="grid dm-tbl">
       <thead><tr><th>POS</th><th>Code</th><th>Désignation</th><th>Quantité</th>
@@ -384,32 +385,33 @@ CSS = """
 @page { size: A4; margin: 14mm; }
 * { box-sizing: border-box; }
 body { font-family: Arial, Helvetica, sans-serif; font-size: 10.5px; color: #111;
-       line-height: 1.35; }
+       line-height: 1.35; --accent: #1f6fb2; --accent-soft: #eef2f6; }
 .name { font-weight: 700; } .addr { color: #222; }
 .lbl { font-size: 9.5px; color: #333; margin-bottom: 2px; }
 .c { text-align: center; } .r { text-align: right; }
 table.grid { width: 100%; border-collapse: collapse; margin-top: 10px; }
-table.grid th { background: #eef2f6; border: 1px solid #9aa7b4; padding: 4px 6px;
+table.grid th { background: var(--accent-soft); border: 1px solid #9aa7b4;
+                border-bottom: 2px solid var(--accent); padding: 4px 6px;
                 font-size: 9.5px; text-align: center; }
 table.grid td { border: 1px solid #9aa7b4; padding: 4px 6px; vertical-align: top; }
-table.grid tr.tot td { font-weight: 700; background: #f6f8fa; }
+table.grid tr.tot td { font-weight: 700; background: var(--accent-soft); }
 .notes { margin-top: 10px; font-size: 9.5px; color: #333; }
 .box { border: 1px solid #333; padding: 6px 8px; min-height: 20px; }
 .box.ctr { text-align: center; }
 .sign { margin-top: 22px; font-size: 10px; }
-.trb-logo { font-weight: 800; font-size: 26px; color: #1f6fb2; letter-spacing: 1px; }
-.trb-logo span { display:block; font-size: 9px; font-weight: 600; color:#1f6fb2; letter-spacing:0; }
-.potitle { font-size: 18px; font-weight: 800; letter-spacing: 2px; text-align: right; }
+.trb-logo { font-weight: 800; font-size: 26px; color: var(--accent); letter-spacing: 1px; }
+.trb-logo span { display:block; font-size: 9px; font-weight: 600; color:var(--accent); letter-spacing:0; }
+.potitle { font-size: 18px; font-weight: 800; letter-spacing: 2px; text-align: right; color: var(--accent); }
 /* sap */
 .sap-head { display:flex; justify-content: space-between; align-items: flex-start;
-            border-bottom: 2px solid #333; padding-bottom: 8px; }
+            border-bottom: 2px solid var(--accent); padding-bottom: 8px; }
 .sap-meta { display:flex; gap: 10px; margin-top: 10px; }
 .sap-meta .mbox { flex:1; border:1px solid #333; padding:6px 8px; }
 .sap-meta .lbl { font-weight:700; }
 .kv div { font-size: 10px; } .kv span { display:inline-block; width: 90px; color:#333; }
 /* order form */
 .of-title { text-align:center; font-size: 22px; font-weight: 800; letter-spacing: 4px;
-            margin: 4px 0 10px; }
+            margin: 4px 0 10px; color: var(--accent); }
 .of-redbox { border:1px solid #c33; color:#c00; text-align:center; padding:6px;
              font-size: 10px; margin-bottom: 10px; }
 .of-row2 { display:flex; gap: 10px; margin-bottom: 8px; }
@@ -419,16 +421,16 @@ table.of-tbl th:first-child { text-align:left; }
 .remarks { min-height: 40px; }
 /* invoice */
 .inv-head { display:flex; justify-content: space-between; align-items:flex-start;
-            border-bottom: 2px solid #444; padding-bottom: 6px; }
-.inv-title { font-size: 17px; font-weight: 800; letter-spacing: 1px; }
+            border-bottom: 2px solid var(--accent); padding-bottom: 6px; }
+.inv-title { font-size: 17px; font-weight: 800; letter-spacing: 1px; color: var(--accent); }
 .inv-meta { margin-top: 8px; } .inv-meta .prov { margin-top: 6px; }
 .inv-foot { margin-top: 16px; border-top: 1px solid #999; padding-top: 4px;
             font-size: 8.5px; color:#666; text-align:center; }
 /* grid */
-.grid-title { text-align:center; margin: 2px 0 10px; }
+.grid-title { text-align:center; margin: 2px 0 10px; color: var(--accent); }
 .grid-two { display:flex; gap: 10px; }
 .gbox { flex:1; border:1px solid #333; padding:0; }
-.ghdr { background:#dbe4ec; border-bottom:1px solid #333; padding:3px 6px;
+.ghdr { background:var(--accent-soft); border-bottom:2px solid var(--accent); padding:3px 6px;
         font-weight:700; font-size: 9.5px; text-align:center; }
 .gbox .name, .gbox .addr, .gbox .contact { padding: 0 6px; } .gbox .name { padding-top:4px; }
 .gbox .contact { padding-bottom: 4px; }
@@ -441,35 +443,58 @@ table.of-tbl th:first-child { text-align:left; }
 .lt-addr { text-align:center; font-size: 10px; margin-bottom: 12px; font-family:'Times New Roman',serif; }
 .lt-row { display:flex; justify-content: space-between; font-family:'Times New Roman',serif; }
 .lt-title { text-align:center; font-weight:800; font-size: 15px; margin: 12px 0;
-            font-family:'Times New Roman',serif; }
+            font-family:'Times New Roman',serif; color: var(--accent); }
 .lt-p { font-family:'Times New Roman',serif; }
 .lt-kv div { font-family:'Times New Roman',serif; } .lt-kv span { display:inline-block; width: 90px; }
 .lt-sign { margin-top: 20px; text-align:right; font-family:'Times New Roman',serif; }
 table.grid.lt td, .lt table.grid td { font-family:'Times New Roman',serif; }
 /* trb po */
 .trbpo-top { display:flex; justify-content: space-between; align-items:center;
-             border-bottom: 2px solid #1f6fb2; padding-bottom: 6px; margin-bottom: 10px; }
+             border-bottom: 2px solid var(--accent); padding-bottom: 6px; margin-bottom: 10px; }
 /* modern */
 .mod-head { display:flex; justify-content: space-between; align-items:flex-start; }
 .mod-sender { text-align:right; font-size: 9.5px; }
 .mod-meta { display:flex; justify-content: space-between; margin: 12px 0;
-            border-top:1px solid #333; border-bottom:1px solid #333; padding: 6px 0; }
+            border-top:2px solid var(--accent); border-bottom:2px solid var(--accent); padding: 6px 0; }
 /* dot matrix */
 .dm-head, .dm-to, .dm-cmd, .dm-modes, .dm-tbl td, .dm-tbl th {
    font-family: 'Courier New', monospace; }
 .dm-head { display:flex; justify-content: space-between; align-items:flex-start;
            border-left: 6px dotted #999; border-right: 6px dotted #999; padding: 6px 10px; }
-.dm-title { font-weight: 800; font-size: 18px; letter-spacing: 2px; }
+.dm-title { font-weight: 800; font-size: 18px; letter-spacing: 2px; color: var(--accent); }
 .dm-to { margin: 10px; } .dm-cmd { font-weight:700; margin: 8px 10px; }
 .dm-modes { margin: 0 10px 8px; font-size: 9.5px; }
 """
 
 
-def render_one(o):
+# Diversité visuelle : chaque commande reçoit une couleur d'accent + une police,
+# pour que deux commandes de même « skin » ne se ressemblent pas.
+_ACCENTS = [
+    ("#1f6fb2", "#e7f0f8"), ("#2e7d32", "#e8f3e9"), ("#8e24aa", "#f3e8f6"),
+    ("#c62828", "#fbe9e9"), ("#00838f", "#e0f0f1"), ("#ef6c00", "#fbeddd"),
+    ("#37474f", "#eceff1"), ("#5d4037", "#efe8e6"), ("#283593", "#e8eaf6"),
+    ("#ad1457", "#fbe6ee"), ("#455a64", "#eceff1"), ("#6a1b9a", "#f2e7f7"),
+    ("#00695c", "#e0efec"), ("#bf360c", "#fbe7df"),
+]
+_FONTS = [
+    "Arial, Helvetica, sans-serif",
+    "'Trebuchet MS', Verdana, sans-serif",
+    "'Georgia', 'Times New Roman', serif",
+    "'Tahoma', Geneva, sans-serif",
+    "'Palatino Linotype', 'Book Antiqua', serif",
+    "Calibri, 'Segoe UI', sans-serif",
+]
+
+
+def render_one(o, idx=0):
+    accent, soft = _ACCENTS[idx % len(_ACCENTS)]
+    # police par commande (les skins letter/dotmatrix gardent la leur via leur CSS)
+    font = _FONTS[(idx * 3 + 1) % len(_FONTS)]
+    style = f"--accent:{accent}; --accent-soft:{soft}; font-family:{font};"
     body = SKINS[o["skin"]](o)
     doc = f"""<!doctype html><html><head><meta charset="utf-8">
 <title>{e(o['out'])}</title><style>{CSS}</style></head>
-<body class="{e(o['skin'])}">{body}</body></html>"""
+<body class="{e(o['skin'])}" style="{style}">{body}</body></html>"""
     os.makedirs(HTML_DIR, exist_ok=True)
     html_path = os.path.join(HTML_DIR, o["out"] + ".html")
     with open(html_path, "w", encoding="utf-8") as f:
@@ -487,14 +512,17 @@ def render_one(o):
 def main():
     with open(os.path.join(HERE, "faked_orders.json"), encoding="utf-8") as f:
         orders = json.load(f)
+    # index stable (position dans la liste complète) -> accent/police déterministes,
+    # même quand on ne rend qu'un sous-ensemble.
+    indexed = list(enumerate(orders))
     only = set(sys.argv[1:])
     if only:
-        orders = [o for o in orders if o["out"] in only]
+        indexed = [(i, o) for i, o in indexed if o["out"] in only]
     os.makedirs(OUT_DIR, exist_ok=True)
-    for o in orders:
-        p = render_one(o)
+    for i, o in indexed:
+        p = render_one(o, i)
         print(f"✓ {o['skin']:14} {o['outcome']:13} → {os.path.basename(p)}")
-    print(f"\n{len(orders)} PDF dans {OUT_DIR}")
+    print(f"\n{len(indexed)} PDF dans {OUT_DIR}")
 
 
 if __name__ == "__main__":

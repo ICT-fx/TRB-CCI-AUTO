@@ -649,9 +649,9 @@
     "out": "Serpin",
     "skin": "trb_orderform",
     "lang": "en",
-    "client_name": "Serapis Onay Trading Ltd.",
+    "client_name": "Levant Serapis Dış Ticaret Ltd. Şti.",
     "sender": {
-      "name": "Serapis Onay Trading Ltd.",
+      "name": "Levant Serapis Dış Ticaret Ltd. Şti.",
       "lines": [
         "84 Sht. Mustafa Ruso Caddesi",
         "K. Kaymakli, Lefkosa",
@@ -917,7 +917,7 @@
     },
     "partner_reference": "TRBVN2026/26",
     "order_date": "27.05.2026",
-    "requested_delivery_date": "1st week of February 2027",
+    "requested_delivery_date": "February 2027",
     "currency": "USD",
     "notes": "Under Decree 98, No CE Mark. 80% shelf-life upon arrival. By Airfreight.",
     "lines": [
@@ -1035,7 +1035,7 @@
     },
     "partner_reference": "2026-22",
     "order_date": "21.04.2026",
-    "requested_delivery_date": "Semaine 11 (Mars 2027)",
+    "requested_delivery_date": "March 2027",
     "currency": "EUR",
     "notes": "Moyen d'expédition : PORTEUR avec HAYON avec transpalette. Merci de respecter le délai.",
     "lines": [

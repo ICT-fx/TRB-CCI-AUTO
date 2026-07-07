@@ -110,10 +110,11 @@ class Resolution:
 
 # --- Validation 1 : format commande (avant résolution) -------------------
 # Champs de source « Commande » obligatoires. Un seul manquant ⇒ rejet (422).
+# La 2e valeur est le motif COURT écrit dans l'Excel A-revoir (colonne Observation).
 _REQUIRED_ORDER_FIELDS: list[tuple[str, str]] = [
-    ("customer_name", "nom du client"),
-    ("partner_reference", "référence partenaire"),
-    ("requested_delivery_date", "date de livraison souhaitée"),
+    ("customer_name", "Pas de nom de client"),
+    ("partner_reference", "Pas de référence commande"),
+    ("requested_delivery_date", "Pas de date de livraison"),
 ]
 
 
@@ -142,22 +143,21 @@ def validate_order(order: OrderExtraction) -> list[str]:
     reasons: list[str] = []
 
     if order.is_readable is False:
-        reasons.append("document illisible")
+        reasons.append("Document illisible")
 
-    missing = [label for attr, label in _REQUIRED_ORDER_FIELDS if _is_blank(getattr(order, attr, None))]
-    if missing:
-        reasons.append("champs manquants: " + ", ".join(missing))
+    reasons.extend(
+        msg for attr, msg in _REQUIRED_ORDER_FIELDS if _is_blank(getattr(order, attr, None))
+    )
 
     if not order.products:
-        reasons.append("aucune ligne produit")
+        reasons.append("Aucun produit")
     else:
-        bad_qty = False
-        for p in order.products:
-            qty = p.quantity
-            if isinstance(qty, bool) or not isinstance(qty, (int, float)) or qty <= 0:
-                bad_qty = True
+        bad_qty = any(
+            isinstance(p.quantity, bool) or not isinstance(p.quantity, (int, float)) or p.quantity <= 0
+            for p in order.products
+        )
         if bad_qty:
-            reasons.append("quantité invalide (> 0 requis)")
+            reasons.append("Quantité invalide")
 
     return reasons
 
@@ -170,20 +170,19 @@ def validate_resolution(order: OrderExtraction, resolution: Resolution) -> list[
       - au moins une ligne produit est hors du catalogue du client (status
         "inconnu" ou resolved_sku non conforme).
     """
-    reasons: list[str] = []
-
+    # Sans client retrouvé, il n'y a pas de catalogue à comparer : on s'arrête là
+    # (inutile d'ajouter un motif produit redondant).
     if not resolution.matched or _is_blank(resolution.customer_code):
-        reasons.append(
-            f"client introuvable dans la master data : {order.customer_name or '(nom absent)'}"
-        )
+        return ["Client inconnu"]
 
-    unknown = []
-    for p in order.products:
-        ok_sku = isinstance(p.resolved_sku, str) and _SKU_RE.match(p.resolved_sku or "")
-        if p.sku_status == "inconnu" or not ok_sku:
-            unknown.append(p.designation or p.sku or "(produit sans nom)")
-    if unknown:
-        reasons.append("produit(s) hors catalogue: " + ", ".join(unknown))
+    reasons: list[str] = []
+    has_unknown = any(
+        p.sku_status == "inconnu"
+        or not (isinstance(p.resolved_sku, str) and _SKU_RE.match(p.resolved_sku or ""))
+        for p in order.products
+    )
+    if has_unknown:
+        reasons.append("Contient un produit que le client n'a pas l'habitude de commander")
 
     return reasons
 

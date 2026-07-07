@@ -271,8 +271,8 @@ ORDERS = [
     # 15 — Serpin (CY/TR) — FAIL_CLIENT
     {
         "source": "Serpin.pdf", "out": "Serpin", "skin": "trb_orderform", "lang": "en",
-        "client_name": "Serapis Onay Trading Ltd.",
-        "sender": {"name": "Serapis Onay Trading Ltd.",
+        "client_name": "Levant Serapis Dış Ticaret Ltd. Şti.",
+        "sender": {"name": "Levant Serapis Dış Ticaret Ltd. Şti.",
                    "lines": ["84 Sht. Mustafa Ruso Caddesi", "K. Kaymakli, Lefkosa", "Mersin-10, Turkey"],
                    "contact": "Naciye Demirciler", "tel": "90 392 227 0253"},
         "recipient": TRB_INT,
@@ -361,7 +361,7 @@ ORDERS = [
                    "contact": "Ms. Nhi Tran", "tel": "+84 838125737"},
         "recipient": TRB_INT,
         "partner_reference": "TRBVN2026/26", "order_date": "27.05.2026",
-        "requested_delivery_date": "1st week of February 2027", "currency": "USD",
+        "requested_delivery_date": "February 2027", "currency": "USD",
         "notes": "Under Decree 98, No CE Mark. 80% shelf-life upon arrival. By Airfreight.",
         "lines": [
             L("VISIOL 1 - VN", "1736", 4, 7),
@@ -399,7 +399,7 @@ ORDERS = [
                    "contact": "M. Stéphane Ruault", "tel": "+33 4 50 95 09 04"},
         "recipient": TRB_INT_CAROUGE,
         "partner_reference": "2026-22", "order_date": "21.04.2026",
-        "requested_delivery_date": "Semaine 11 (Mars 2027)", "currency": "EUR",
+        "requested_delivery_date": "March 2027", "currency": "EUR",
         "notes": "Moyen d'expédition : PORTEUR avec HAYON avec transpalette. Merci de respecter le délai.",
         "lines": [L("OSTENIL PLUS 1 - EU-WEST", "1013", 20, 0)],
         "outcome": "pass",

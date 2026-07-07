@@ -83,18 +83,18 @@ il n'est pas rejouable hors-ligne, mais cette cohérence stricte rend le résult
 | 5 | cigalah drug store.pdf | cigalah.pdf | Emirates Crescent Drug Store L.L.C. | 9000005 | grid | 1328, 1325 | ✅ passe (record 200) |
 | 6 | Combiphar.pdf | Combiphar.pdf | PT Nusantara Farma Sentosa | 9000006 | sap | 1344 | ✅ passe (record 200) |
 | 7 | Corporacion Am.pdf | Corporacion_Am.pdf | Distribuidora Centroamericana de Farmacia, S.A. | 9000007 | invoice | 1344 | ✅ passe (record 200) |
-| 8 | Doc G.pdf | Doc_G.pdf | Farmaceutici Aurelia S.r.l. | 9000008 | sap | 1621, 1749 | ⛔ À-revoir 422 — client introuvable |
+| 8 | Doc G.pdf | Doc_G.pdf | Farmaceutici Aurelia S.r.l. | 9000008 | sap | 1621, 1749 | ⛔ À-revoir — Client inconnu |
 | 9 | Hong kong.pdf | Hong_kong.pdf | Jade Harbour Medical (Hong Kong) Ltd. | 9000009 | grid | 1719 | ✅ passe (record 200) |
 | 10 | Kukje.pdf | Kukje.pdf | Hankuk Medi Pharm Co., Ltd. | 9000010 | letter | 1313 | ✅ passe (record 200) |
 | 11 | Mephropharm.pdf | Mephropharm.pdf | PT Bumi Sehat Farmasi | 9000011 | sap | 1780, 1784 | ✅ passe (record 200) |
-| 12 | Optimed.pdf | Optimed.pdf | Medikom Adria d.o.o. | 9000012 | trb_orderform | 0899, 0903, 0687, 1083, 1307, 1784 **⟵ intrus** | ⛔ À-revoir 422 — produit hors catalogue |
+| 12 | Optimed.pdf | Optimed.pdf | Medikom Adria d.o.o. | 9000012 | trb_orderform | 0899, 0903, 0687, 1083, 1307, 1784 **⟵ intrus** | ⛔ À-revoir — Produit inhabituel |
 | 13 | PL.pdf | PL.pdf | Vistula Pharma Sp. z o.o. | 9000013 | trb_orderform | 1082 | ✅ passe (record 200) |
-| 14 | river pharma.pdf | river_pharma.pdf | Andes River Pharma S.A.C. | 9000014 | invoice | 1203 | ⛔ À-revoir 422 — client introuvable |
-| 15 | Serpin.pdf | Serpin.pdf | Serapis Onay Trading Ltd. | 9000015 | trb_orderform | 0687, 0899, 0903, 1083 | ⛔ À-revoir 422 — client introuvable |
+| 14 | river pharma.pdf | river_pharma.pdf | Andes River Pharma S.A.C. | 9000014 | invoice | 1203 | ⛔ À-revoir — Client inconnu |
+| 15 | Serpin.pdf | Serpin.pdf | Levant Serapis Dış Ticaret Ltd. Şti. | 9000015 | trb_orderform | 0687, 0899, 0903, 1083 | ⛔ À-revoir — Client inconnu |
 | 16 | star int.pdf | star_int.pdf | Nile Star Medical Co. | 9000016 | grid | 0587, 1013, 1082, 1202 | ✅ passe (record 200) |
 | 17 | synthemedic.pdf | synthemedic.pdf | Atlas Médic S.A. | 9000017 | dotmatrix | 1083 | ✅ passe (record 200) |
 | 18 | TH.pdf | TH.pdf | Siam Vision Distribution Ltd. | 9000018 | trb_po | 1604 | ✅ passe (record 200) |
-| 19 | UK.pdf | UK.pdf | Albion Pharma Distribution Ltd | 9000019 | grid | 1297, 1344 **⟵ intrus** | ⛔ À-revoir 422 — produit hors catalogue |
+| 19 | UK.pdf | UK.pdf | Albion Pharma Distribution Ltd | 9000019 | grid | 1297, 1344 **⟵ intrus** | ⛔ À-revoir — Produit inhabituel |
 | 20 | VT.pdf | VT.pdf | Mekong Health Distribution Co., Ltd. | 9000020 | trb_po | 1736, 1874, 1580, 1570 | ✅ passe (record 200) |
 | 21 | Al tafaol.pdf | Al_tafaol.pdf | Al Wafra Trading Company W.L.L. | 9000021 | modern | 1013, 1203, 1325, 1328 | ✅ passe (record 200) |
 | 22 | france.pdf | france.pdf | Léman Pharma Distribution SAS | 9000022 | trb_orderform | 1013 | ✅ passe (record 200) |
