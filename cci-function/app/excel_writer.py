@@ -184,8 +184,11 @@ def build_error_report(rows: list[dict]) -> bytes:
     1 ligne par commande en erreur. Chaque `row` (dict) :
       - nom_fichier : le nouveau nom (contenant le nom du client)
       - date        : date de l'erreur (déjà formatée, ex. 02/07/2026)
-      - raison      : motif du rejet ; note : note qualité (optionnelle)
+      - raison      : motif du rejet, COURT (c'est la seule Observation écrite)
     Colonnes : Nom du fichier | Date de l'erreur | Observation.
+
+    L'Observation = uniquement le motif court. On n'y accole PAS la note de l'IA
+    (souvent verbeuse et sans valeur) : on ne veut que l'essentiel.
     `rows` vide ⇒ classeur valide avec uniquement les en-têtes.
     """
     rows = rows or []
@@ -195,9 +198,7 @@ def build_error_report(rows: list[dict]) -> bytes:
     ws.append(_ERROR_COLUMNS)
     for r in rows:
         r = r if isinstance(r, dict) else {}
-        raison = (r.get("raison") or "").strip()
-        note = (r.get("note") or "").strip()
-        observation = (raison + (" — " + note if note else "")).strip(" —")
+        observation = (r.get("raison") or "").strip()
         ws.append([
             _safe_cell(r.get("nom_fichier")),
             _safe_cell(r.get("date")),

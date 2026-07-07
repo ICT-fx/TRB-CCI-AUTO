@@ -30,6 +30,7 @@ Règles importantes :
 13. Mets "is_readable" à false uniquement si le document est trop dégradé pour une extraction fiable.
 14. Mets "confidence" entre 0 et 1 selon ta confiance globale dans l'extraction.
 15. delivery_address = l'adresse de livraison / le destinataire figurant sur la commande (nom du destinataire, ville et surtout le PAYS). Elle est essentielle pour distinguer certains clients qui portent le même nom sur la commande mais livrent dans des pays différents. Extrais-la fidèlement ; null si vraiment absente.
+16. quality_note : laisse-le à null dans la quasi-totalité des cas. Ne le remplis (2 à 5 mots) QUE si un vrai problème gêne la lecture. N'explique jamais ton raisonnement et ne commente jamais une donnée correcte ou cohérente (ex. une date valide) — dans ce cas, n'écris rien.
 
 N'extrais PAS : le lieu de l'incoterm, la valeur ou le prix des articles, la monnaie, les conditions de paiement, le numéro de TVA ni l'incoterm — ces champs proviennent d'une table de référence interne, jamais du document."""
 
@@ -108,7 +109,12 @@ EXTRACT_ORDER_TOOL = {
             },
             "quality_note": {
                 "type": ["string", "null"],
-                "description": "Courte note sur les problèmes de qualité / ambiguïtés, sinon null.",
+                "description": (
+                    "null dans la quasi-totalité des cas. Uniquement 2 à 5 mots si un "
+                    "VRAI problème gêne la lecture (ex. « scan illisible », « quantité "
+                    "ambiguë »). N'explique JAMAIS ton raisonnement et ne commente JAMAIS "
+                    "une donnée correcte ou cohérente (ex. une date valide)."
+                ),
             },
         },
         "required": [
