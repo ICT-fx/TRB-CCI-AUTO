@@ -29,3 +29,6 @@ next-env.d.ts
 
 # session bookkeeping
 /.remember
+
+# Sauvegarde Azure (contient des secrets — ne jamais committer)
+azure-backup/
