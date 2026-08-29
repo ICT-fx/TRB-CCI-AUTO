@@ -237,3 +237,38 @@ az rest --method put \
 - Docs liées : `docs/OVERVIEW.md` (fonctionnement), `cci-function/DEPLOIEMENT.md`
   (ancienne instance), `docs/HANDOFF-logic-app.md` (contexte historique — la
   définition live sauvegardée fait foi en cas d'écart).
+
+---
+
+## 6. Instance reconstruite le 2026-08-29 (compte KEDGE)
+
+La stack a été **entièrement remontée** sur un **nouveau compte Azure**, isolée de
+tout ce qui existait déjà dessus.
+
+| | Valeur |
+|---|---|
+| Compte / tenant | `fantin.schellekens@kedgebs.com` — KEDGE Business School (`6b3a59c1-9475-4729-b8d9-f72ffd0dd0cd`) |
+| Souscription | `Azure subscription 1` — `5f5485ae-b444-493d-8d4e-56ba5e77158e` |
+| Groupe de ressources | **`trb-cci-rg`** (`switzerlandnorth`), tags `project=trb-cci`, `env=demo` — créé neuf, ne touche pas à `rg-trb-sales-hub` ni `trb-sop-rg` qui vivent sur la même souscription |
+| Function App | **`trb-cci-extraction-8f21c4`** (l'ancien nom `…-ae73fa` est toujours réservé globalement, donc nouveau suffixe) |
+| Storage | `trbccista8f21c4` |
+| Logic App | `trb-cci-logic` — définition identique à `azure-backup/40-logicapp-definition.json`, avec souscription / nom d'app / clé `?code=` réécrits |
+| Connexion SharePoint | `sharepointonline` — créée, **non autorisée** (statut `Error`) : l'étape OAuth du §4.6 n'a pas été faite |
+| Master data | **démo** (22 clients fictifs `90000xx`, 50 articles) |
+
+**État vérifié** : les 3 endpoints répondent
+(`https://trb-cci-extraction-8f21c4.azurewebsites.net/api/{extract,build,build_errors}`,
+401 sans clé), et un test réel `POST /api/extract` sur `sample_commande.png` a
+renvoyé **422 « Client inconnu »** — la chaîne Azure → Claude → règles métier
+fonctionne (client absent de la master data démo, comportement attendu).
+
+**Limites connues de cette instance** :
+- Les actions SharePoint du Logic App **ne s'exécuteront pas** tant que la
+  connexion n'est pas autorisée (§4.6). Le workflow est **visuellement complet**
+  dans le concepteur, c'était l'objectif.
+- Le déclencheur quotidien 15h est **actif** : il produira un run en échec par
+  jour sur `Liste_du_dossier`. Pour l'arrêter :
+  `az rest --method post --url ".../workflows/trb-cci-logic/disable?api-version=2019-05-01"`.
+- Pour passer en production réelle : autoriser la connexion SharePoint, puis
+  `cp cci-function/app/master_data.REEL.backup.xlsx cci-function/app/master_data.xlsx`
+  et republier (§4.4).
